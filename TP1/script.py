@@ -1,15 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[11]:
-
-
-#!pip install medmnist
-
-
-# In[ ]:
-
-
 from tqdm import tqdm
 import numpy as np
 import torch
@@ -221,7 +209,7 @@ def fit(X_train, y_train, nn, criterion, optimizer, n_epochs, to_device=True, ba
             optimizer.step()
 
         #if (epoch+1) % 10 == 0:
-        print ('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, n_epochs, accu_loss))
+        #print ('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, n_epochs, accu_loss))
         loss_values.append(accu_loss)
 
     return loss_values, nn.to("cpu")
@@ -250,10 +238,6 @@ def evaluate_network(net, X, y, to_device=True):
     
     return conf_mat
 
-
-# In[15]:
-
-
 parameters_test = {
     "n_epochs": [50],
     "batch_size": [32, 64],
@@ -268,22 +252,23 @@ parameters_test = {
 param_values = [v for v in parameters_test.values()]
 param_names = [k for k in parameters_test.keys()]
 param_combinations = list(itertools.product(*param_values))
+total_combinations = len(param_combinations)
 
 results = {}
 
 # Loop over all hyperparameter combinations
 
-"""
-for i, params in enumerate(param_combinations):
-    print(f"Testing hyperparameter combination {i+1}/{len(param_combinations)}")
-    print(params)
+for i, params in tqdm(enumerate(param_combinations), total=total_combinations, desc="Hyperparameter Search"):
+    #print(f"Testing hyperparameter combination {i+1}/{len(param_combinations)}")
+    #print(params)
+
+    param_dict = dict(zip(param_names, params))
 
     # Unpack the parameters
     n_epochs, batch_size, learning_rate, n_layers, activation_function, loss_function, optimizer_name = params
     num_inputs = X_train_flattened.shape[1]
 
     hidden_layers_sizes = ((num_inputs + n_classes) // 2,) * n_layers
-    print(hidden_layers_sizes)
 
     # Define the network
     dnn = DNN(input_size = num_inputs,
@@ -314,18 +299,18 @@ for i, params in enumerate(param_combinations):
 
     # Evaluate the network
     conf_mat_train = evaluate_network(trained_net, X_train_flattened, y_train)
-    conf_mat = evaluate_network(trained_net, X_val_flattened, y_val)
+    conf_mat_val = evaluate_network(trained_net, X_val_flattened, y_val)
 
     # Store the results
-    results[params] = {
+    results[str(params)] = {
         'loss_values': loss_values,
-        'confusion_matrix': conf_mat
+        'confusion_matrix_train': conf_mat_train.to_list(),
+        'confusion_matrix_val': conf_mat_val.to_list()
     }
 
-    # results saved to disk after each iteration to ensure that we don't lose everything if the code crashes
-    results_df = pd.DataFrame(results)
-    results_df.to_csv("results.csv")
-"""
+    with open("results_dnn.json", "w") as f:
+        json.dump(results, f, indent=4)
+
 
 class CNN(nn.Module):
 
@@ -410,18 +395,20 @@ parameters_test_cnn = {
     "optimizer": ["ADAM", "SGD", "RMSprop"],
 }
 
+
 # Create a grid of hyperparameters
 param_values = [v for v in parameters_test_cnn.values()]
 param_names = [k for k in parameters_test_cnn.keys()]
 param_combinations = list(itertools.product(*param_values))
 total_combinations = len(param_combinations)
 
+
 for i, params in tqdm(enumerate(param_combinations), total=total_combinations, desc="Hyperparameter Search"):
 
-    print(f"\nTesting combination {i+1}/{total_combinations}")
+    #print(f"\nTesting combination {i+1}/{total_combinations}")
     
     param_dict = dict(zip(param_names, params))
-    print(param_dict)
+    #print(param_dict)
 
     if param_dict["activation_function"] == "relu":
         activation = nn.ReLU()
@@ -466,8 +453,7 @@ for i, params in tqdm(enumerate(param_combinations), total=total_combinations, d
     }
 
     # Save results to JSON after each iteration
-    with open("results.json", "w") as f:
+    with open("results_cnn.json", "w") as f:
         json.dump(results, f, indent=4)
 
-    print("Results saved!")
-    
+    #print("Results saved!")
