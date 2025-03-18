@@ -118,13 +118,23 @@ train_dataset.montage(length=20)
 
 # We will first check if the data is balanced:
 
-# In[163]:
+# In[ ]:
 
 
 train_labels = train_dataset.labels.squeeze()
 
 fig = go.Figure()
 fig.add_trace(go.Histogram(x=train_labels, name='train'))
+
+# increase font size to 14
+fig.update_layout(font=dict(size=16))
+
+fig.update_traces(texttemplate='%{y}', textposition='outside')
+fig.update_layout(plot_bgcolor='white')
+fig.update_yaxes(range=[0, 5000])
+fig.update_xaxes(title_text='Label')
+fig.update_yaxes(title_text='Nº of samples')
+fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
 
 
 # As we can see, the dataset is heavily unbalanced. 
@@ -230,13 +240,23 @@ def augment_undersampled_dataset(dataset, n_samples_per_class=700):
 undersampled_data = random_undersampling(train_dataset, 700)
 
 
-# In[166]:
+# In[215]:
 
 
 labels = [label for _, label in undersampled_data]
 
 fig = go.Figure()
 fig.add_trace(go.Histogram(x=labels, name='undersampled'))
+
+# increase font size to 14
+fig.update_layout(font=dict(size=16))
+
+fig.update_traces(texttemplate='%{y}', textposition='outside')
+fig.update_layout(plot_bgcolor='white')
+fig.update_yaxes(range=[0, 1100])
+fig.update_xaxes(title_text='Label')
+fig.update_yaxes(title_text='Nº of samples')
+fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
 
 
 # In[ ]:
@@ -389,16 +409,16 @@ def evaluate_network(net, X, y, to_device=True):
     return conf_mat
 
 
-# In[ ]:
+# In[206]:
 
 
 parameters_test = {
-    "n_epochs": [50],
+    "n_epochs": [2],
     "batch_size": [32, 64],
     "learning_rate": [0.001, 0.01, 0.1],
     "n_layers": [3, 15],
     "activation_function": ['relu', 'sigmoid'],
-    "loss_function": [nn.CrossEntropyLoss(), nn.MultiMarginLoss()],
+    "loss_function": ["Cross Entropy", "Multi Margin"], #nn.CrossEntropyLoss(), nn.MultiMarginLoss()],
     "optimizer": ["ADAM", "SGD", "RMSprop"],
 }
 
@@ -408,7 +428,7 @@ param_names = [k for k in parameters_test.keys()]
 param_combinations = list(itertools.product(*param_values))
 
 
-# In[189]:
+# In[207]:
 
 
 # dict to store the results
@@ -421,8 +441,9 @@ for i, params in enumerate(param_combinations):
 
     print(f"Testing hyperparameter combination {i+1}/{len(param_combinations)}")
     print(params)
+    param_dict = dict(zip(param_names, params))
 
-    results[params] = {}
+    results[i] = {**param_dict, "results": []}
 
     # Unpack the parameters
     n_epochs, batch_size, learning_rate, n_layers, activation_function, loss_function, optimizer_name = params
@@ -450,7 +471,13 @@ for i, params in enumerate(param_combinations):
                 activation = activation_function)
 
         # Define the loss function and optimizer
-        criterion = loss_function
+        if loss_function == "Cross Entropy":
+            criterion = nn.CrossEntropyLoss()
+        elif loss_function == "Multi Margin":
+            criterion = nn.MultiMarginLoss()
+        else:
+            raise ValueError(f"Unknown loss function: {loss_function}")
+        
         if optimizer_name == "ADAM":
             optimizer = optim.Adam(dnn.parameters(), lr=learning_rate)
         elif optimizer_name == "SGD":
@@ -475,14 +502,14 @@ for i, params in enumerate(param_combinations):
         conf_mat = evaluate_network(trained_net, X_val_flattened_fold, y_val_fold)
 
         # Store the results
-        results[params][fold] = {
+        results[i]["results"].append({
             'loss_values': loss_values,
-            'confusion_matrix': conf_mat
-        }
+            'confusion_matrix_train': conf_mat_train.tolist(),
+            'confusion_matrix_val': conf_mat.tolist()
+        })
 
-    # results saved to disk after each iteration to ensure that we don't lose everything if the code crashes
-    results_df = pd.DataFrame(results)
-    results_df.to_csv("results.csv")
+    with open("results.json", "w") as f:
+        json.dump(results, f, indent=4)
 
 
 # In[193]:
@@ -571,7 +598,7 @@ parameters_test_cnn = {
     "n_layers": [3, 15],
     "batch_size": [32, 64],
     "learning_rate": [0.001, 0.01, 0.1],
-    "loss_function": [nn.CrossEntropyLoss(), nn.MultiMarginLoss()],
+    "loss_function": ["Cross Entropy", "Multi Margin"], #[nn.CrossEntropyLoss(), nn.MultiMarginLoss()],
     "optimizer": ["ADAM", "SGD", "RMSprop"],
 }
 
@@ -582,7 +609,7 @@ param_combinations = list(itertools.product(*param_values))
 total_combinations = len(param_combinations)
 
 
-# In[197]:
+# In[ ]:
 
 
 results = {}
@@ -593,7 +620,7 @@ for i, params in tqdm(enumerate(param_combinations), total=total_combinations, d
     param_dict = dict(zip(param_names, params))
     print(param_dict)
 
-    results[str(param_dict)] = {}
+    results[i] = {**param_dict, "results": []}
 
     if param_dict["activation_function"] == "relu":
         activation = nn.ReLU()
@@ -630,7 +657,14 @@ for i, params in tqdm(enumerate(param_combinations), total=total_combinations, d
         )
 
         # Define loss function and optimizer
-        criterion = param_dict["loss_function"]
+
+        if param_dict["loss_function"] == "Cross Entropy":
+            criterion = nn.CrossEntropyLoss()
+        elif param_dict["loss_function"] == "Multi Margin":
+            criterion = nn.MultiMarginLoss()
+        else:
+            raise ValueError(f"Unknown loss function: {loss_function}")
+        
         optimizer = {
             "ADAM": optim.Adam(cnn.parameters(), lr=param_dict["learning_rate"]),
             "SGD": optim.SGD(cnn.parameters(), lr=param_dict["learning_rate"]),
@@ -651,11 +685,11 @@ for i, params in tqdm(enumerate(param_combinations), total=total_combinations, d
         conf_mat_val = evaluate_network(trained_net, X_val_fold, y_val_fold)
 
         # Store results
-        results[str(param_dict)][fold] = {
+        results[i]["results"].append({
             'loss_values': loss_values,
             'confusion_matrix_train': conf_mat_train.tolist(),
-            'confusion_matrix_val': conf_mat_val.tolist()
-        }
+            'confusion_matrix_val': conf_mat_val.tolist(),
+        })
 
     with open("results.json", "w") as f:
         json.dump(results, f, indent=4)
