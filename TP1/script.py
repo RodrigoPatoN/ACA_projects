@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[152]:
+
+
 from tqdm import tqdm
 import numpy as np
 import torch
@@ -14,18 +20,21 @@ import plotly.express as px
 import plotly.graph_objects as go
 import torch.nn.functional as F
 import json
+import random
+from torch.utils.data import ConcatDataset
+from PIL import Image
 
 import medmnist
 from medmnist import INFO, Evaluator
 
 
-# In[4]:
+# In[8]:
 
 
 tqdm().disable = True
 
 
-# In[5]:
+# In[9]:
 
 
 if torch.backends.mps.is_available():
@@ -39,7 +48,7 @@ else:
     print("Running on CPU")
 
 
-# In[6]:
+# In[10]:
 
 
 print(f"MedMNIST v{medmnist.__version__} @ {medmnist.HOMEPAGE}")
@@ -47,7 +56,7 @@ print(f"MedMNIST v{medmnist.__version__} @ {medmnist.HOMEPAGE}")
 
 # # We first work on a 2D dataset with size 28x28
 
-# In[7]:
+# In[11]:
 
 
 data_flag = 'dermamnist'
@@ -64,7 +73,7 @@ DataClass = getattr(medmnist, info['python_class'])
 
 # ## First, we read the MedMNIST data, preprocess them and encapsulate them into dataloader form.
 
-# In[8]:
+# In[159]:
 
 
 # preprocessing
@@ -74,28 +83,22 @@ data_transform = transforms.Compose([
 
 # load the data
 train_dataset = DataClass(split='train', transform=data_transform, download=download)
-val_dataset = DataClass(split='val', transform=data_transform, download=download)
 test_dataset = DataClass(split='test', transform=data_transform, download=download)
 
-pil_dataset = DataClass(split='train', download=download)
-
-# encapsulate data into dataloader form
+# Encapsulate data into dataloader form
 train_loader = data.DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-train_loader_at_eval = data.DataLoader(dataset=train_dataset, batch_size=2*BATCH_SIZE, shuffle=False)
 test_loader = data.DataLoader(dataset=test_dataset, batch_size=2*BATCH_SIZE, shuffle=False)
 
 
-# In[9]:
+# In[160]:
 
 
 print(train_dataset)
 print("===================")
-print(val_dataset)
-print("===================")
 print(test_dataset)
 
 
-# In[10]:
+# In[161]:
 
 
 # visualization
@@ -103,7 +106,7 @@ print(test_dataset)
 train_dataset.montage(length=1)
 
 
-# In[11]:
+# In[162]:
 
 
 # montage
@@ -111,24 +114,171 @@ train_dataset.montage(length=1)
 train_dataset.montage(length=20)
 
 
+# ## Data Pre-processing
+
+# We will first check if the data is balanced:
+
+# In[163]:
+
+
+train_labels = train_dataset.labels.squeeze()
+
+fig = go.Figure()
+fig.add_trace(go.Histogram(x=train_labels, name='train'))
+
+
+# As we can see, the dataset is heavily unbalanced. 
+# 
+# To fix this, we will start by performing data augmentation on the examples from the other classes in order to increase the number of examples from these classes.
+# 
+# We will then use random undersampling class to get a maximum of 1000 examples from each class.
+
+# In[ ]:
+
+
+def random_undersampling(dataset, n_samples_per_class):
+
+    all_labels = np.array(dataset.labels.squeeze())
+    unique_labels = np.unique(all_labels)
+
+    undersampled_imgs = []
+    undersampled_labels = []
+
+    # Undersample each class
+    for label in unique_labels:
+        label_indices = np.where(all_labels == label)[0]
+
+        if len(label_indices) > n_samples_per_class:
+            label_indices = np.random.choice(label_indices, n_samples_per_class, replace=False)
+        
+        imgs = [dataset[i][0] for i in label_indices]
+        undersampled_imgs.extend(imgs)
+        undersampled_labels.extend([label] * len(imgs))
+    
+    # Shuffle the undersampled dataset
+    indices = np.random.permutation(len(undersampled_imgs))
+    undersampled_imgs = torch.tensor(np.array(undersampled_imgs)[indices])
+    undersampled_labels = torch.tensor(np.array(undersampled_labels)[indices])
+
+    return list(zip(undersampled_imgs, undersampled_labels))
+
+
+# Apply random augmentation to the undersampled dataset
+def augment_undersampled_dataset(dataset, n_samples_per_class=700):
+
+    rotation = transforms.RandomRotation(30)
+    translation = transforms.RandomAffine(0, translate=(0.1, 0.1))
+    h_flip = transforms.RandomHorizontalFlip(p=1.0)  # Always apply
+    v_flip = transforms.RandomVerticalFlip(p=1.0)  # Always apply
+
+    augmented_imgs = []
+    augmented_labels = []
+
+    all_labels = []
+    all_imgs = []
+    
+    for imgs, labels in dataset:
+        all_imgs.append(imgs)
+        all_labels.append(labels)
+
+    all_labels = np.array(all_labels)
+    unique_labels = np.unique(all_labels)
+
+    for label in unique_labels:
+
+        print(label)
+        
+        class_indices = np.where(all_labels == label)[0]
+        class_imgs = [all_imgs[i] for i in class_indices]
+
+        augmented_imgs_class = class_imgs.copy()
+
+
+        while len(augmented_imgs_class) < n_samples_per_class:
+            
+            # Randomly select an image from the class
+            img = random.choice(class_imgs)
+
+            # Ensure img is a PIL image (if it's numpy, convert it)
+            if isinstance(img, np.ndarray):
+                img = Image.fromarray(img)  # Convert numpy array to PIL image
+
+            # Randomly choose a transformation
+            transformation = random.choice([rotation, translation, h_flip, v_flip])
+
+            # Apply the transformation
+            transformed_img = transformation(img)
+            augmented_imgs_class.append(transformed_img)
+
+        augmented_imgs.extend(augmented_imgs_class)
+        augmented_labels.extend([label] * len(augmented_imgs_class))
+
+    # Shuffle the augmented dataset
+    indices = np.random.permutation(len(augmented_imgs))
+    augmented_imgs = torch.tensor(np.array(augmented_imgs)[indices])
+    augmented_labels = torch.tensor(np.array(augmented_labels)[indices])
+
+    print(f"Augmented dataset size: {len(augmented_imgs)}")
+    print(augmented_imgs[0].shape)
+
+    return list(zip(augmented_imgs, augmented_labels))
+
+
+# In[ ]:
+
+
+undersampled_data = random_undersampling(train_dataset, 700)
+
+
+# In[166]:
+
+
+labels = [label for _, label in undersampled_data]
+
+fig = go.Figure()
+fig.add_trace(go.Histogram(x=labels, name='undersampled'))
+
+
+# In[ ]:
+
+
+augmented_data = augment_undersampled_dataset(undersampled_data, 700)
+
+
+# In[168]:
+
+
+labels = [label for _, label in augmented_data]
+
+fig = go.Figure()
+fig.add_trace(go.Histogram(x=labels, name='undersampled'))
+
+
+# # MLP
+
+# ### Transform image into vector
+
+# #### 1. Flattening
+
+# In[177]:
+
+
 # Stack input features
-X_train = torch.stack([sample[0] for sample in train_dataset])
-X_val = torch.stack([sample[0] for sample in val_dataset])
+X_train = torch.stack([sample[0] for sample in augmented_data])
 X_test = torch.stack([sample[0] for sample in test_dataset])
 
 # Convert labels to 1D tensor
-y_train = torch.tensor(train_dataset.labels.squeeze())
-y_val = torch.tensor(val_dataset.labels.squeeze())
+labels_train = [label for _,label in augmented_data]
+y_train = torch.tensor(labels_train)
 y_test = torch.tensor(test_dataset.labels.squeeze())
 
 X_train_flattened = X_train.reshape(X_train.shape[0], -1)
-X_val_flattened = X_val.reshape(X_val.shape[0], -1)
 X_test_flattened = X_test.reshape(X_test.shape[0], -1)
 
 
 # #### Get the MLPs
 
-# In[14]:
+# In[181]:
 
 
 class DNN(nn.Module):
@@ -209,7 +359,7 @@ def fit(X_train, y_train, nn, criterion, optimizer, n_epochs, to_device=True, ba
             optimizer.step()
 
         #if (epoch+1) % 10 == 0:
-        #print ('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, n_epochs, accu_loss))
+        print ('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, n_epochs, accu_loss))
         loss_values.append(accu_loss)
 
     return loss_values, nn.to("cpu")
@@ -238,6 +388,10 @@ def evaluate_network(net, X, y, to_device=True):
     
     return conf_mat
 
+
+# In[ ]:
+
+
 parameters_test = {
     "n_epochs": [50],
     "batch_size": [32, 64],
@@ -252,64 +406,86 @@ parameters_test = {
 param_values = [v for v in parameters_test.values()]
 param_names = [k for k in parameters_test.keys()]
 param_combinations = list(itertools.product(*param_values))
-total_combinations = len(param_combinations)
+
+
+# In[189]:
+
+
+# dict to store the results
 
 results = {}
+k = 5
 
 # Loop over all hyperparameter combinations
+for i, params in enumerate(param_combinations):
 
-for i, params in tqdm(enumerate(param_combinations), total=total_combinations, desc="Hyperparameter Search"):
-    #print(f"Testing hyperparameter combination {i+1}/{len(param_combinations)}")
-    #print(params)
+    print(f"Testing hyperparameter combination {i+1}/{len(param_combinations)}")
+    print(params)
 
-    param_dict = dict(zip(param_names, params))
+    results[params] = {}
 
     # Unpack the parameters
     n_epochs, batch_size, learning_rate, n_layers, activation_function, loss_function, optimizer_name = params
     num_inputs = X_train_flattened.shape[1]
 
     hidden_layers_sizes = ((num_inputs + n_classes) // 2,) * n_layers
+    total_data_train = X_train_flattened.shape[0]
+    total_data_fold = total_data_train // k
 
-    # Define the network
-    dnn = DNN(input_size = num_inputs,
-            hidden_sizes = hidden_layers_sizes, 
-            num_classes = n_classes, 
-            activation = activation_function)
+    for fold in range(k):
 
-    # Define the loss function and optimizer
-    criterion = loss_function
-    if optimizer_name == "ADAM":
-        optimizer = optim.Adam(dnn.parameters(), lr=learning_rate)
-    elif optimizer_name == "SGD":
-        optimizer = optim.SGD(dnn.parameters(), lr=learning_rate)
-    elif optimizer_name == "RMSprop":
-        optimizer = optim.RMSprop(dnn.parameters(), lr=learning_rate)
-    else:
-        raise ValueError(f"Unknown optimizer: {optimizer_name}")
+        idxs_val_fold = list(range(fold*total_data_fold, (fold+1)*total_data_fold))
+        idxs_train_fold = list(set(range(total_data_train)) - set(idxs_val_fold))
 
-    # Train the network
-    loss_values, trained_net = fit(X_train_flattened, 
-                                y_train, 
-                                dnn,
-                                criterion,
-                                optimizer,
-                                n_epochs = n_epochs, 
-                                batch_size = batch_size, 
-                                to_device = False)
+        X_val_flattened_fold = X_train_flattened[idxs_val_fold]
+        y_val_fold = y_train[idxs_val_fold]
 
-    # Evaluate the network
-    conf_mat_train = evaluate_network(trained_net, X_train_flattened, y_train)
-    conf_mat_val = evaluate_network(trained_net, X_val_flattened, y_val)
+        X_train_flattened_fold = X_train_flattened[idxs_train_fold]
+        y_train_fold = y_train[idxs_train_fold]
 
-    # Store the results
-    results[str(params)] = {
-        'loss_values': loss_values,
-        'confusion_matrix_train': conf_mat_train.to_list(),
-        'confusion_matrix_val': conf_mat_val.to_list()
-    }
+        # Define the network
+        dnn = DNN(input_size = num_inputs,
+                hidden_sizes = hidden_layers_sizes, 
+                num_classes = n_classes, 
+                activation = activation_function)
 
-    with open("results_dnn.json", "w") as f:
-        json.dump(results, f, indent=4)
+        # Define the loss function and optimizer
+        criterion = loss_function
+        if optimizer_name == "ADAM":
+            optimizer = optim.Adam(dnn.parameters(), lr=learning_rate)
+        elif optimizer_name == "SGD":
+            optimizer = optim.SGD(dnn.parameters(), lr=learning_rate)
+        elif optimizer_name == "RMSprop":
+            optimizer = optim.RMSprop(dnn.parameters(), lr=learning_rate)
+        else:
+            raise ValueError(f"Unknown optimizer: {optimizer_name}")
+
+        # Train the network
+        loss_values, trained_net = fit(X_train_flattened_fold, 
+                                    y_train_fold.long(), 
+                                    dnn,
+                                    criterion,
+                                    optimizer,
+                                    n_epochs = n_epochs, 
+                                    batch_size = batch_size, 
+                                    to_device = False)
+
+        # Evaluate the network
+        conf_mat_train = evaluate_network(trained_net, X_train_flattened_fold, y_train_fold)
+        conf_mat = evaluate_network(trained_net, X_val_flattened_fold, y_val_fold)
+
+        # Store the results
+        results[params][fold] = {
+            'loss_values': loss_values,
+            'confusion_matrix': conf_mat
+        }
+
+    # results saved to disk after each iteration to ensure that we don't lose everything if the code crashes
+    results_df = pd.DataFrame(results)
+    results_df.to_csv("results.csv")
+
+
+# In[193]:
 
 
 class CNN(nn.Module):
@@ -380,7 +556,12 @@ class CNN(nn.Module):
         x = self.output_layer(x)
         return x
 
+
+# In[ ]:
+
+
 parameters_test_cnn = {
+    "n_epochs": [50],
     "activation_function": ['relu', 'sigmoid'],
     "pooling": [nn.MaxPool2d(2), nn.AvgPool2d(2)],
     "n_conv_layers": [1, 2],
@@ -390,11 +571,9 @@ parameters_test_cnn = {
     "n_layers": [3, 15],
     "batch_size": [32, 64],
     "learning_rate": [0.001, 0.01, 0.1],
-    "n_epochs": [50],
     "loss_function": [nn.CrossEntropyLoss(), nn.MultiMarginLoss()],
     "optimizer": ["ADAM", "SGD", "RMSprop"],
 }
-
 
 # Create a grid of hyperparameters
 param_values = [v for v in parameters_test_cnn.values()]
@@ -403,12 +582,18 @@ param_combinations = list(itertools.product(*param_values))
 total_combinations = len(param_combinations)
 
 
+# In[197]:
+
+
+results = {}
+
 for i, params in tqdm(enumerate(param_combinations), total=total_combinations, desc="Hyperparameter Search"):
 
-    #print(f"\nTesting combination {i+1}/{total_combinations}")
-    
+    print(f"\nTesting combination {i+1}/{total_combinations}")
     param_dict = dict(zip(param_names, params))
-    #print(param_dict)
+    print(param_dict)
+
+    results[str(param_dict)] = {}
 
     if param_dict["activation_function"] == "relu":
         activation = nn.ReLU()
@@ -416,44 +601,68 @@ for i, params in tqdm(enumerate(param_combinations), total=total_combinations, d
         activation = nn.Sigmoid()
     else:
         raise ValueError(f"Unknown activation function: {param_dict['activation_function']}")
+    
+    total_data_train = X_train.shape[0]
+    total_data_fold = total_data_train // k
 
-    # Define the network
-    cnn = CNN(
-        input_channels = 3,
-        num_classes = n_classes,
-        num_conv_layers = param_dict["n_conv_layers"],
-        conv_out_channels=param_dict["conv_out_channels"],
-        conv_kernel_size=param_dict["conv_kernel_size"],
-        conv_padding=param_dict["conv_padding"],
-        activation_function=activation,
-        pooling=param_dict["pooling"],
-        num_hidden_layers=param_dict["n_layers"],
-    )
+    for fold in range(k):
 
-    # Define loss function and optimizer
-    criterion = param_dict["loss_function"]
-    optimizer = {
-        "ADAM": optim.Adam(cnn.parameters(), lr=param_dict["learning_rate"]),
-        "SGD": optim.SGD(cnn.parameters(), lr=param_dict["learning_rate"]),
-        "RMSprop": optim.RMSprop(cnn.parameters(), lr=param_dict["learning_rate"]),
-    }[param_dict["optimizer"]]
+        idxs_val_fold = list(range(fold*total_data_fold, (fold+1)*total_data_fold))
+        idxs_train_fold = list(set(range(total_data_train)) - set(idxs_val_fold))
 
-    # Train the network
-    loss_values, trained_net = fit(X_train, y_train, cnn, criterion, optimizer, param_dict["n_epochs"], param_dict["batch_size"])
+        X_val_fold = X_train[idxs_val_fold]
+        y_val_fold = y_train[idxs_val_fold]
 
-    # Evaluate the network
-    conf_mat_train = evaluate_network(trained_net, X_train, y_train)
-    conf_mat_val = evaluate_network(trained_net, X_val, y_val)
+        X_train_fold = X_train[idxs_train_fold]
+        y_train_fold = y_train[idxs_train_fold]
 
-    # Store results
-    results[str(param_dict)] = {
-        'loss_values': loss_values,
-        'confusion_matrix_train': conf_mat_train.tolist(),
-        'confusion_matrix_val': conf_mat_val.tolist()
-    }
+        # Define the network
+        cnn = CNN(
+            input_channels = 3,
+            num_classes = n_classes,
+            num_conv_layers = param_dict["n_conv_layers"],
+            conv_out_channels=param_dict["conv_out_channels"],
+            conv_kernel_size=param_dict["conv_kernel_size"],
+            conv_padding=param_dict["conv_padding"],
+            activation_function=activation,
+            pooling=param_dict["pooling"],
+            num_hidden_layers=param_dict["n_layers"],
+        )
 
-    # Save results to JSON after each iteration
-    with open("results_cnn.json", "w") as f:
+        # Define loss function and optimizer
+        criterion = param_dict["loss_function"]
+        optimizer = {
+            "ADAM": optim.Adam(cnn.parameters(), lr=param_dict["learning_rate"]),
+            "SGD": optim.SGD(cnn.parameters(), lr=param_dict["learning_rate"]),
+            "RMSprop": optim.RMSprop(cnn.parameters(), lr=param_dict["learning_rate"]),
+        }[param_dict["optimizer"]]
+
+        # Train the network
+        loss_values, trained_net = fit(X_train_fold,
+                                    y_train_fold.long(), 
+                                    cnn, 
+                                    criterion, 
+                                    optimizer, 
+                                    param_dict["n_epochs"], 
+                                    param_dict["batch_size"])
+
+        # Evaluate the network
+        conf_mat_train = evaluate_network(trained_net, X_train_fold, y_train_fold)
+        conf_mat_val = evaluate_network(trained_net, X_val_fold, y_val_fold)
+
+        # Store results
+        results[str(param_dict)][fold] = {
+            'loss_values': loss_values,
+            'confusion_matrix_train': conf_mat_train.tolist(),
+            'confusion_matrix_val': conf_mat_val.tolist()
+        }
+
+    with open("results.json", "w") as f:
         json.dump(results, f, indent=4)
 
-    #print("Results saved!")
+
+# In[ ]:
+
+
+
+
