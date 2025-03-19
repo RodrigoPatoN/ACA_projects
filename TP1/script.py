@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[152]:
-
-
 from tqdm import tqdm
 import numpy as np
 import torch
@@ -23,6 +17,7 @@ import json
 import random
 from torch.utils.data import ConcatDataset
 from PIL import Image
+import sys
 
 import medmnist
 from medmnist import INFO, Evaluator
@@ -258,30 +253,13 @@ fig.update_xaxes(title_text='Label')
 fig.update_yaxes(title_text='Nº of samples')
 fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
 
-
-# In[ ]:
-
-
 augmented_data = augment_undersampled_dataset(undersampled_data, 700)
-
-
-# In[168]:
 
 
 labels = [label for _, label in augmented_data]
 
 fig = go.Figure()
 fig.add_trace(go.Histogram(x=labels, name='undersampled'))
-
-
-# # MLP
-
-# ### Transform image into vector
-
-# #### 1. Flattening
-
-# In[177]:
-
 
 # Stack input features
 X_train = torch.stack([sample[0] for sample in augmented_data])
@@ -294,11 +272,6 @@ y_test = torch.tensor(test_dataset.labels.squeeze())
 
 X_train_flattened = X_train.reshape(X_train.shape[0], -1)
 X_test_flattened = X_test.reshape(X_test.shape[0], -1)
-
-
-# #### Get the MLPs
-
-# In[181]:
 
 
 class DNN(nn.Module):
@@ -409,9 +382,6 @@ def evaluate_network(net, X, y, to_device=True):
     return conf_mat
 
 
-# In[206]:
-
-
 parameters_test = {
     "n_epochs": [50],
     "batch_size": [32, 64],
@@ -427,14 +397,17 @@ param_values = [v for v in parameters_test.values()]
 param_names = [k for k in parameters_test.keys()]
 param_combinations = list(itertools.product(*param_values))
 
-
-# In[207]:
-
-
-# dict to store the results
-
 results = {}
 k = 5
+
+#get the combinations which have already been tested
+already_tested_dnn = pd.read_json("results.json")
+already_tested_dnn = already_tested_dnn.transpose()
+
+already_tested_params_combinations = already_tested_dnn[param_names].values
+already_tested_params_combinations = [tuple(row) for row in already_tested_params_combinations]
+
+param_combinations = [params for params in param_combinations if params not in already_tested_params_combinations]
 
 # Loop over all hyperparameter combinations
 for i, params in enumerate(param_combinations):
