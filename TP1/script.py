@@ -413,7 +413,7 @@ def evaluate_network(net, X, y, to_device=True):
 
 
 parameters_test = {
-    "n_epochs": [2],
+    "n_epochs": [50],
     "batch_size": [32, 64],
     "learning_rate": [0.001, 0.01, 0.1],
     "n_layers": [3, 15],
