@@ -485,9 +485,6 @@ for i, params in enumerate(param_combinations):
         json.dump(results, f, indent=4)
 
 
-# In[193]:
-
-
 class CNN(nn.Module):
 
     def __init__(self, num_conv_layers, conv_out_channels,
@@ -557,13 +554,10 @@ class CNN(nn.Module):
         return x
 
 
-# In[ ]:
-
-
 parameters_test_cnn = {
     "n_epochs": [50],
     "activation_function": ['relu', 'sigmoid'],
-    "pooling": [nn.MaxPool2d(2), nn.AvgPool2d(2)],
+    "pooling": ["MaxPool", "AvgPool"], #[nn.MaxPool2d(2), nn.AvgPool2d(2)],
     "n_conv_layers": [1, 2],
     "conv_out_channels": [16],
     "conv_kernel_size": [3],
@@ -581,10 +575,6 @@ param_names = [k for k in parameters_test_cnn.keys()]
 param_combinations = list(itertools.product(*param_values))
 total_combinations = len(param_combinations)
 
-
-# In[ ]:
-
-
 results = {}
 
 for i, params in tqdm(enumerate(param_combinations), total=total_combinations, desc="Hyperparameter Search"):
@@ -601,6 +591,13 @@ for i, params in tqdm(enumerate(param_combinations), total=total_combinations, d
         activation = nn.Sigmoid()
     else:
         raise ValueError(f"Unknown activation function: {param_dict['activation_function']}")
+    
+    if param_dict["pooling"] == "MaxPool":
+        pooling = nn.MaxPool2d(2)
+    elif param_dict["pooling"] == "AvgPool":
+        pooling = nn.AvgPool2d(2)
+    else:
+        raise ValueError(f"Unknown pooling layer: {param_dict['pooling']}")
     
     total_data_train = X_train.shape[0]
     total_data_fold = total_data_train // k
@@ -625,7 +622,7 @@ for i, params in tqdm(enumerate(param_combinations), total=total_combinations, d
             conv_kernel_size=param_dict["conv_kernel_size"],
             conv_padding=param_dict["conv_padding"],
             activation_function=activation,
-            pooling=param_dict["pooling"],
+            pooling=pooling,
             num_hidden_layers=param_dict["n_layers"],
         )
 
