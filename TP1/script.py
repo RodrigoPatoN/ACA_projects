@@ -526,7 +526,7 @@ for i, params in tqdm(enumerate(param_combinations), total=total_combinations, d
     param_dict = dict(zip(param_names, params))
     print(param_dict)
 
-    results[i] = {**param_dict, "results": []}
+    results[i + len(already_tested_params_combinations)] = {**param_dict, "results": []}
 
     if param_dict["activation_function"] == "relu":
         activation = nn.ReLU()
