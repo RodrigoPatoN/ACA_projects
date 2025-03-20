@@ -18,19 +18,12 @@ import random
 from torch.utils.data import ConcatDataset
 from PIL import Image
 import sys
+import os
 
 import medmnist
 from medmnist import INFO, Evaluator
 
-
-# In[8]:
-
-
 tqdm().disable = True
-
-
-# In[9]:
-
 
 if torch.backends.mps.is_available():
     device = torch.device("mps")
@@ -42,17 +35,7 @@ else:
     device = torch.device("cpu")
     print("Running on CPU")
 
-
-# In[10]:
-
-
 print(f"MedMNIST v{medmnist.__version__} @ {medmnist.HOMEPAGE}")
-
-
-# # We first work on a 2D dataset with size 28x28
-
-# In[11]:
-
 
 data_flag = 'dermamnist'
 download = True
@@ -64,12 +47,6 @@ n_channels = info['n_channels']
 n_classes = len(info['label'])
 
 DataClass = getattr(medmnist, info['python_class'])
-
-
-# ## First, we read the MedMNIST data, preprocess them and encapsulate them into dataloader form.
-
-# In[159]:
-
 
 # preprocessing
 data_transform = transforms.Compose([
@@ -84,37 +61,13 @@ test_dataset = DataClass(split='test', transform=data_transform, download=downlo
 train_loader = data.DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 test_loader = data.DataLoader(dataset=test_dataset, batch_size=2*BATCH_SIZE, shuffle=False)
 
-
-# In[160]:
-
-
 print(train_dataset)
 print("===================")
 print(test_dataset)
 
-
-# In[161]:
-
-
-# visualization
-
 train_dataset.montage(length=1)
 
-
-# In[162]:
-
-
-# montage
-
 train_dataset.montage(length=20)
-
-
-# ## Data Pre-processing
-
-# We will first check if the data is balanced:
-
-# In[ ]:
-
 
 train_labels = train_dataset.labels.squeeze()
 
@@ -130,15 +83,6 @@ fig.update_yaxes(range=[0, 5000])
 fig.update_xaxes(title_text='Label')
 fig.update_yaxes(title_text='Nº of samples')
 fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
-
-
-# As we can see, the dataset is heavily unbalanced. 
-# 
-# To fix this, we will start by performing data augmentation on the examples from the other classes in order to increase the number of examples from these classes.
-# 
-# We will then use random undersampling class to get a maximum of 1000 examples from each class.
-
-# In[ ]:
 
 
 def random_undersampling(dataset, n_samples_per_class):
@@ -168,7 +112,6 @@ def random_undersampling(dataset, n_samples_per_class):
     return list(zip(undersampled_imgs, undersampled_labels))
 
 
-# Apply random augmentation to the undersampled dataset
 def augment_undersampled_dataset(dataset, n_samples_per_class=700):
 
     rotation = transforms.RandomRotation(30)
@@ -228,15 +171,7 @@ def augment_undersampled_dataset(dataset, n_samples_per_class=700):
 
     return list(zip(augmented_imgs, augmented_labels))
 
-
-# In[ ]:
-
-
 undersampled_data = random_undersampling(train_dataset, 700)
-
-
-# In[215]:
-
 
 labels = [label for _, label in undersampled_data]
 
@@ -359,7 +294,7 @@ def fit(X_train, y_train, nn, criterion, optimizer, n_epochs, to_device=True, ba
 
 
 def evaluate_network(net, X, y, to_device=True):
-    # Set the model to evaluation mode
+    
     net.eval()
     if to_device:
         X = X.to(device)
@@ -401,7 +336,7 @@ results = {}
 k = 5
 
 #get the combinations which have already been tested
-already_tested_dnn = pd.read_json("results.json")
+already_tested_dnn = pd.read_json("results_dnn.json")
 already_tested_dnn = already_tested_dnn.transpose()
 
 already_tested_params_combinations = already_tested_dnn[param_names].values
@@ -475,7 +410,7 @@ for i, params in enumerate(param_combinations):
         conf_mat = evaluate_network(trained_net, X_val_flattened_fold, y_val_fold)
 
         # Store the results
-        results[i]["results"].append({
+        results[i + len(already_tested_params_combinations)]["results"].append({
             'loss_values': loss_values,
             'confusion_matrix_train': conf_mat_train.tolist(),
             'confusion_matrix_val': conf_mat.tolist()
@@ -569,10 +504,18 @@ parameters_test_cnn = {
     "optimizer": ["ADAM", "SGD", "RMSprop"],
 }
 
-# Create a grid of hyperparameters
 param_values = [v for v in parameters_test_cnn.values()]
 param_names = [k for k in parameters_test_cnn.keys()]
 param_combinations = list(itertools.product(*param_values))
+
+print(os.listdir("./"))
+
+already_tested_cnn = pd.read_json("results_cnn_1.json").T
+
+already_tested_params_combinations = already_tested_cnn[param_names].values
+already_tested_params_combinations = [tuple(row) for row in already_tested_params_combinations]
+
+param_combinations = [params for params in param_combinations if params not in already_tested_params_combinations]
 total_combinations = len(param_combinations)
 
 results = {}
@@ -655,18 +598,11 @@ for i, params in tqdm(enumerate(param_combinations), total=total_combinations, d
         conf_mat_val = evaluate_network(trained_net, X_val_fold, y_val_fold)
 
         # Store results
-        results[i]["results"].append({
+        results[i + len(already_tested_params_combinations)]["results"].append({
             'loss_values': loss_values,
             'confusion_matrix_train': conf_mat_train.tolist(),
             'confusion_matrix_val': conf_mat_val.tolist(),
         })
 
-    with open("results.json", "w") as f:
+    with open("results_cnn.json", "w") as f:
         json.dump(results, f, indent=4)
-
-
-# In[ ]:
-
-
-
-
