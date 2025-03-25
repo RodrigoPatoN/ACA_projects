@@ -608,15 +608,27 @@ for i, params in tqdm(enumerate(param_combinations), total=total_combinations, d
         json.dump(results, f, indent=4)
 
 
-# Now I will do the training with early stopping based on val loss - only the 50 best combinations will be tested 
+def evaluate_loss(model, X_val, y_val, criterion):
+    model.eval()  # Set to evaluation mode (disables dropout, batch norm updates)
+    with torch.no_grad():  # No gradient computation for faster evaluation
+        outputs = model(X_val)
+        loss = criterion(outputs, y_val.long())  # Compute loss
+    return loss.item()
+
+
+# Now I will do the training with early stopping based on val loss - only the 50 best combinations will be tested
+
+best_50_df = pd.read_csv("data_cnn_50_best.csv")
+best_50_parmas = best_50_df[param_names].values
+best_50_params = [tuple(row) for row in best_50_parmas]
 
 patience = 5  # Number of epochs to wait for improvement
 min_delta = 1e-4  # Minimum change in loss to qualify as an improvement
 
 results = {}
-for i, params in tqdm(enumerate(param_combinations), total=total_combinations, desc="Hyperparameter Search"):
+for i, params in tqdm(enumerate(best_50_params), total=50, desc="Hyperparameter Search"):
 
-    print(f"\nTesting combination {i+1}/{total_combinations}")
+    print(f"\nTesting combination {i+1}/{50}")
     param_dict = dict(zip(param_names, params))
     print(param_dict)
 
@@ -666,7 +678,7 @@ for i, params in tqdm(enumerate(param_combinations), total=total_combinations, d
             val_loss = evaluate_loss(trained_net, X_val_fold, y_val_fold, criterion)
 
             loss_values.append(train_loss)
-            print(f"Epoch {epoch+1}: Train Loss = {train_loss:.4f}, Val Loss = {val_loss:.4f}")
+            print(f"Epoch {epoch+1}: Train Loss = {train_loss[0]:.4f}, Val Loss = {val_loss:.4f}")
 
             # Check if validation loss improved
             if val_loss < best_val_loss - min_delta:
