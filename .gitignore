@@ -21,5 +21,3 @@ ipython_config.py
 */.DS_Store
 */.ipynb_checkpoints
 */.vscode
-
-*.csv

@@ -606,3 +606,90 @@ for i, params in tqdm(enumerate(param_combinations), total=total_combinations, d
 
     with open("results_cnn.json", "w") as f:
         json.dump(results, f, indent=4)
+
+
+# Now I will do the training with early stopping based on val loss - only the 50 best combinations will be tested 
+
+patience = 5  # Number of epochs to wait for improvement
+min_delta = 1e-4  # Minimum change in loss to qualify as an improvement
+
+results = {}
+for i, params in tqdm(enumerate(param_combinations), total=total_combinations, desc="Hyperparameter Search"):
+
+    print(f"\nTesting combination {i+1}/{total_combinations}")
+    param_dict = dict(zip(param_names, params))
+    print(param_dict)
+
+    results[i + len(already_tested_params_combinations)] = {**param_dict, "results": []}
+
+    activation = nn.ReLU() if param_dict["activation_function"] == "relu" else nn.Sigmoid()
+    pooling = nn.MaxPool2d(2) if param_dict["pooling"] == "MaxPool" else nn.AvgPool2d(2)
+
+    total_data_train = X_train.shape[0]
+    total_data_fold = total_data_train // k
+
+    for fold in range(k):
+
+        idxs_val_fold = list(range(fold*total_data_fold, (fold+1)*total_data_fold))
+        idxs_train_fold = list(set(range(total_data_train)) - set(idxs_val_fold))
+
+        X_val_fold, y_val_fold = X_train[idxs_val_fold], y_train[idxs_val_fold]
+        X_train_fold, y_train_fold = X_train[idxs_train_fold], y_train[idxs_train_fold]
+
+        cnn = CNN(
+            input_channels=3,
+            num_classes=n_classes,
+            num_conv_layers=param_dict["n_conv_layers"],
+            conv_out_channels=param_dict["conv_out_channels"],
+            conv_kernel_size=param_dict["conv_kernel_size"],
+            conv_padding=param_dict["conv_padding"],
+            activation_function=activation,
+            pooling=pooling,
+            num_hidden_layers=param_dict["n_layers"],
+        )
+
+        criterion = nn.CrossEntropyLoss() if param_dict["loss_function"] == "Cross Entropy" else nn.MultiMarginLoss()
+        optimizer = {
+            "ADAM": optim.Adam(cnn.parameters(), lr=param_dict["learning_rate"]),
+            "SGD": optim.SGD(cnn.parameters(), lr=param_dict["learning_rate"]),
+            "RMSprop": optim.RMSprop(cnn.parameters(), lr=param_dict["learning_rate"]),
+        }[param_dict["optimizer"]]
+
+        # Early Stopping Initialization
+        best_val_loss = np.inf
+        epochs_no_improve = 0
+        best_model = None
+        loss_values = []
+
+        for epoch in range(param_dict["n_epochs"]):
+            train_loss, trained_net = fit(X_train_fold, y_train_fold.long(), cnn, criterion, optimizer, 1, param_dict["batch_size"])
+            val_loss = evaluate_loss(trained_net, X_val_fold, y_val_fold, criterion)
+
+            loss_values.append(train_loss)
+            print(f"Epoch {epoch+1}: Train Loss = {train_loss:.4f}, Val Loss = {val_loss:.4f}")
+
+            # Check if validation loss improved
+            if val_loss < best_val_loss - min_delta:
+                best_val_loss = val_loss
+                epochs_no_improve = 0
+                best_model = trained_net
+            else:
+                epochs_no_improve += 1
+
+            # Stop if no improvement for `patience` epochs
+            if epochs_no_improve >= patience:
+                print(f"Early stopping at epoch {epoch+1}")
+                break
+
+        # Evaluate the best saved model
+        conf_mat_train = evaluate_network(best_model, X_train_fold, y_train_fold)
+        conf_mat_val = evaluate_network(best_model, X_val_fold, y_val_fold)
+
+        results[i + len(already_tested_params_combinations)]["results"].append({
+            'loss_values': loss_values,
+            'confusion_matrix_train': conf_mat_train.tolist(),
+            'confusion_matrix_val': conf_mat_val.tolist(),
+        })
+
+    with open("results_cnn.json", "w") as f:
+        json.dump(results, f, indent=4)
