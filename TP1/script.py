@@ -867,10 +867,12 @@ for i, params in tqdm(enumerate(best_50_params), total=50, desc="Hyperparameter 
         else:
             raise ValueError(f"Unknown loss function: {loss_function}")
         
+        decay = 0.1 * param_dict["learning_rate"]
+        
         optimizer = {
-            "ADAM": optim.Adam(cnn.parameters(), lr=param_dict["learning_rate"], weight_decay=0.01),
-            "SGD": optim.SGD(cnn.parameters(), lr=param_dict["learning_rate"], weight_decay=0.01),
-            "RMSprop": optim.RMSprop(cnn.parameters(), lr=param_dict["learning_rate"], weight_decay=0.01),
+            "ADAM": optim.Adam(cnn.parameters(), lr=param_dict["learning_rate"], weight_decay=decay),
+            "SGD": optim.SGD(cnn.parameters(), lr=param_dict["learning_rate"], weight_decay=decay),
+            "RMSprop": optim.RMSprop(cnn.parameters(), lr=param_dict["learning_rate"], weight_decay=decay),
         }[param_dict["optimizer"]]
 
         # Train the network
