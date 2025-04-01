@@ -29,7 +29,7 @@ if torch.backends.mps.is_available():
     device = torch.device("mps")
     print("Running on MPS")
 elif torch.cuda.is_available():
-    device = torch.device("cuda")
+    device = torch.device("cuda:1")
     print("Running on GPU")
 else:
     device = torch.device("cpu")
