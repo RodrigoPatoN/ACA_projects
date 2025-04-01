@@ -718,9 +718,10 @@ for i, params in tqdm(enumerate(best_50_params), total=50, desc="Hyperparameter 
     with open("results_cnn.json", "w") as f:
         json.dump(results, f, indent=4)
 
-print(best_50_params)
 
 for i, params in tqdm(enumerate(best_50_params), total=50, desc="Hyperparameter Search"):
+
+    break
 
     print(f"\nTesting combination {i+1}/{total_combinations}")
     param_dict = dict(zip(param_names, params))
@@ -782,6 +783,94 @@ for i, params in tqdm(enumerate(best_50_params), total=50, desc="Hyperparameter 
             "ADAM": optim.Adam(cnn.parameters(), lr=param_dict["learning_rate"]),
             "SGD": optim.SGD(cnn.parameters(), lr=param_dict["learning_rate"]),
             "RMSprop": optim.RMSprop(cnn.parameters(), lr=param_dict["learning_rate"]),
+        }[param_dict["optimizer"]]
+
+        # Train the network
+        loss_values, trained_net = fit(X_train_fold,
+                                    y_train_fold.long(), 
+                                    cnn, 
+                                    criterion, 
+                                    optimizer, 
+                                    param_dict["n_epochs"], 
+                                    param_dict["batch_size"])
+
+        # Evaluate the network
+        conf_mat_train = evaluate_network(trained_net, X_train_fold, y_train_fold)
+        conf_mat_val = evaluate_network(trained_net, X_val_fold, y_val_fold)
+
+        # Store results
+        results[i + len(already_tested_params_combinations)]["results"].append({
+            'loss_values': loss_values,
+            'confusion_matrix_train': conf_mat_train.tolist(),
+            'confusion_matrix_val': conf_mat_val.tolist(),
+        })
+
+    with open("results_cnn.json", "w") as f:
+        json.dump(results, f, indent=4)
+
+
+for i, params in tqdm(enumerate(best_50_params), total=50, desc="Hyperparameter Search"):
+
+    print(f"\nTesting combination {i+1}/{total_combinations}")
+    param_dict = dict(zip(param_names, params))
+    print(param_dict)
+
+    results[i + len(already_tested_params_combinations)] = {**param_dict, "results": []}
+
+    if param_dict["activation_function"] == "relu":
+        activation = nn.ReLU()
+    elif param_dict["activation_function"] == "sigmoid":
+        activation = nn.Sigmoid()
+    else:
+        raise ValueError(f"Unknown activation function: {param_dict['activation_function']}")
+    
+    if param_dict["pooling"] == "MaxPool":
+        pooling = nn.MaxPool2d(2)
+    elif param_dict["pooling"] == "AvgPool":
+        pooling = nn.AvgPool2d(2)
+    else:
+        raise ValueError(f"Unknown pooling layer: {param_dict['pooling']}")
+    
+    total_data_train = X_train_undersampled.shape[0]
+    total_data_fold = total_data_train // k
+
+    for fold in range(k):
+
+        idxs_val_fold = list(range(fold*total_data_fold, (fold+1)*total_data_fold))
+        idxs_train_fold = list(set(range(total_data_train)) - set(idxs_val_fold))
+
+        X_val_fold = X_train_undersampled[idxs_val_fold]
+        y_val_fold = y_train_undersampled[idxs_val_fold]
+
+        X_train_fold = X_train_undersampled[idxs_train_fold]
+        y_train_fold = y_train_undersampled[idxs_train_fold]
+
+        # Define the network
+        cnn = CNN(
+            input_channels = 3,
+            num_classes = n_classes,
+            num_conv_layers = param_dict["n_conv_layers"],
+            conv_out_channels=param_dict["conv_out_channels"],
+            conv_kernel_size=param_dict["conv_kernel_size"],
+            conv_padding=param_dict["conv_padding"],
+            activation_function=activation,
+            pooling=pooling,
+            num_hidden_layers=param_dict["n_layers"],
+        )
+
+        # Define loss function and optimizer
+
+        if param_dict["loss_function"] == "Cross Entropy":
+            criterion = nn.CrossEntropyLoss()
+        elif param_dict["loss_function"] == "Multi Margin":
+            criterion = nn.MultiMarginLoss()
+        else:
+            raise ValueError(f"Unknown loss function: {loss_function}")
+        
+        optimizer = {
+            "ADAM": optim.Adam(cnn.parameters(), lr=param_dict["learning_rate"], weight_decay=0.01),
+            "SGD": optim.SGD(cnn.parameters(), lr=param_dict["learning_rate"], weight_decay=0.01),
+            "RMSprop": optim.RMSprop(cnn.parameters(), lr=param_dict["learning_rate"], weight_decay=0.01),
         }[param_dict["optimizer"]]
 
         # Train the network
