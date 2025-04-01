@@ -629,8 +629,7 @@ best_50_df = pd.read_csv("data_cnn_50_best.csv")
 best_50_parmas = best_50_df[param_names].values
 best_50_params = [tuple(row) for row in best_50_parmas]
 
-
-best_50_params = []
+#best_50_params = []
 
 patience = 5  # Number of epochs to wait for improvement
 min_delta = 1e-4  # Minimum change in loss to qualify as an improvement
@@ -719,6 +718,7 @@ for i, params in tqdm(enumerate(best_50_params), total=50, desc="Hyperparameter 
     with open("results_cnn.json", "w") as f:
         json.dump(results, f, indent=4)
 
+print(best_50_params)
 
 for i, params in tqdm(enumerate(best_50_params), total=50, desc="Hyperparameter Search"):
 
