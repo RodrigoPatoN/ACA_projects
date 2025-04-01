@@ -831,7 +831,7 @@ for i, params in tqdm(enumerate(best_50_params), total=50, desc="Hyperparameter 
     else:
         raise ValueError(f"Unknown pooling layer: {param_dict['pooling']}")
     
-    total_data_train = X_train_undersampled.shape[0]
+    total_data_train = X_train.shape[0]
     total_data_fold = total_data_train // k
 
     for fold in range(k):
@@ -839,11 +839,11 @@ for i, params in tqdm(enumerate(best_50_params), total=50, desc="Hyperparameter 
         idxs_val_fold = list(range(fold*total_data_fold, (fold+1)*total_data_fold))
         idxs_train_fold = list(set(range(total_data_train)) - set(idxs_val_fold))
 
-        X_val_fold = X_train_undersampled[idxs_val_fold]
-        y_val_fold = y_train_undersampled[idxs_val_fold]
+        X_val_fold = X_train[idxs_val_fold]
+        y_val_fold = y_train[idxs_val_fold]
 
-        X_train_fold = X_train_undersampled[idxs_train_fold]
-        y_train_fold = y_train_undersampled[idxs_train_fold]
+        X_train_fold = X_train[idxs_train_fold]
+        y_train_fold = y_train[idxs_train_fold]
 
         # Define the network
         cnn = CNN(
