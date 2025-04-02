@@ -809,6 +809,15 @@ for i, params in tqdm(enumerate(best_50_params), total=50, desc="Hyperparameter 
         json.dump(results, f, indent=4)
 
 
+already_tested_cnn = pd.read_json("results_cnn_decay.json").T
+
+already_tested_params_combinations = already_tested_cnn[param_names].values
+already_tested_params_combinations = [tuple(row) for row in already_tested_params_combinations]
+
+param_combinations = [params for params in best_50_params if params not in already_tested_params_combinations]
+total_combinations = len(param_combinations)
+
+
 for i, params in tqdm(enumerate(best_50_params), total=50, desc="Hyperparameter Search"):
 
     print(f"\nTesting combination {i+1}/{total_combinations}")
