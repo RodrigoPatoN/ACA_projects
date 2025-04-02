@@ -992,9 +992,9 @@ for i, params in tqdm(enumerate(param_combinations), total=total_combinations, d
             raise ValueError(f"Unknown loss function: {loss_function}")
                 
         optimizer = {
-            "ADAM": optim.Adam(cnn.parameters(), lr=param_dict["learning_rate"], weight_decay=1e-4),
-            "SGD": optim.SGD(cnn.parameters(), lr=param_dict["learning_rate"], weight_decay=1e-4),
-            "RMSprop": optim.RMSprop(cnn.parameters(), lr=param_dict["learning_rate"], weight_decay=1e-4),
+            "ADAM": optim.Adam(cnn.parameters(), lr=param_dict["learning_rate"]),
+            "SGD": optim.SGD(cnn.parameters(), lr=param_dict["learning_rate"]),
+            "RMSprop": optim.RMSprop(cnn.parameters(), lr=param_dict["learning_rate"]),
         }[param_dict["optimizer"]]
 
         # Train the network
