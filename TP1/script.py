@@ -933,6 +933,8 @@ total_combinations = len(param_combinations)
 
 for i, params in tqdm(enumerate(param_combinations), total=total_combinations, desc="Hyperparameter Search"):
 
+    break
+
     print(f"\nTesting combination {i+1}/{total_combinations}")
     param_dict = dict(zip(param_names, params))
     print(param_dict)
