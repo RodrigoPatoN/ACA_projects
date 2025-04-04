@@ -301,7 +301,7 @@ def fit(X_train, y_train, nn, criterion, optimizer, n_epochs, to_device=True, ba
         val_loss = evaluate_loss(nn, X_train, y_train, criterion)
         val_losses.append(val_loss)
 
-    return loss_values, nn.to("cpu"), val_loss
+    return loss_values, nn.to("cpu"), val_losses
 
 
 def evaluate_network(net, X, y, to_device=True):
