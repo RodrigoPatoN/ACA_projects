@@ -274,6 +274,7 @@ def fit(X_train, y_train, nn, criterion, optimizer, n_epochs, to_device=True, ba
 
     # Train the network
     loss_values = []
+    val_losses = []
     for epoch in range(n_epochs):
 
         accu_loss = 0
@@ -297,7 +298,10 @@ def fit(X_train, y_train, nn, criterion, optimizer, n_epochs, to_device=True, ba
         print ('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, n_epochs, accu_loss))
         loss_values.append(accu_loss)
 
-    return loss_values, nn.to("cpu")
+        val_loss = evaluate_loss(nn, X_train, y_train, criterion)
+        val_losses.append(val_loss)
+
+    return loss_values, nn.to("cpu"), val_losses
 
 
 def evaluate_network(net, X, y, to_device=True):
@@ -1111,7 +1115,7 @@ for i, params in tqdm(enumerate(param_combinations), total=total_combinations, d
         }[param_dict["optimizer"]]
 
         # Train the network
-        loss_values, trained_net = fit(X_train_fold,
+        loss_values, trained_net, val_loss = fit(X_train_fold,
                                     y_train_fold.long(), 
                                     cnn, 
                                     criterion, 
@@ -1122,8 +1126,6 @@ for i, params in tqdm(enumerate(param_combinations), total=total_combinations, d
         # Evaluate the network
         conf_mat_train = evaluate_network(trained_net, X_train_fold, y_train_fold)
         conf_mat_val = evaluate_network(trained_net, X_val_fold, y_val_fold)
-
-        val_loss = evaluate_loss(trained_net, X_val_fold, y_val_fold, criterion)
 
         # Store results
         results[i + len(already_tested_params_combinations)]["results"].append({
