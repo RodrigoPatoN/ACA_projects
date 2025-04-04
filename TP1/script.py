@@ -1029,7 +1029,7 @@ for i, params in tqdm(enumerate(param_combinations), total=total_combinations, d
 
 
 best_parameters_test_cnn = {
-    "n_epochs": [1000],
+    "n_epochs": [500],
     "activation_function": ['relu'],
     "pooling": ["MaxPool"],
     "n_conv_layers": [3],
@@ -1038,7 +1038,7 @@ best_parameters_test_cnn = {
     "conv_padding": [1],
     "n_layers": [1],
     "batch_size": [64],
-    "learning_rate": [0.001],
+    "learning_rate": [0.01],
     "loss_function": ["Cross Entropy"],
     "optimizer": ["SGD"],
 }
