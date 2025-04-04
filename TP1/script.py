@@ -623,8 +623,6 @@ def evaluate_loss(model, X_val, y_val, criterion):
     return loss.item()
 
 
-# Now I will do the training with early stopping based on val loss - only the 50 best combinations will be tested
-
 best_50_df = pd.read_csv("data_cnn_50_best.csv")
 best_50_parmas = best_50_df[param_names].values
 best_50_params = [tuple(row) for row in best_50_parmas]
@@ -1013,6 +1011,122 @@ for i, params in tqdm(enumerate(param_combinations), total=total_combinations, d
         # Store results
         results[i + len(already_tested_params_combinations)]["results"].append({
             'loss_values': loss_values,
+            'confusion_matrix_train': conf_mat_train.tolist(),
+            'confusion_matrix_val': conf_mat_val.tolist(),
+        })
+
+    with open("results_cnn.json", "w") as f:
+        json.dump(results, f, indent=4)
+
+
+# Final adjustments to the best parameters
+
+
+best_parameters_test_cnn = {
+    "n_epochs": [50],
+    "activation_function": ['relu'],
+    "pooling": ["MaxPool"],
+    "n_conv_layers": [3],
+    "conv_out_channels": [64],
+    "conv_kernel_size": [3],
+    "conv_padding": [1],
+    "n_layers": [1],
+    "batch_size": [64],
+    "learning_rate": [0.1],
+    "loss_function": ["Cross Entropy"],
+    "optimizer": ["SGD"],
+}
+
+
+param_values = [v for v in best_parameters_test_cnn.values()]
+param_names = [k for k in best_parameters_test_cnn.keys()]
+param_combinations = list(itertools.product(*param_values))
+
+total_combinations = len(param_combinations)
+
+for i, params in tqdm(enumerate(param_combinations), total=total_combinations, desc="Hyperparameter Search"):
+
+    print(f"\nTesting combination {i+1}/{total_combinations}")
+    param_dict = dict(zip(param_names, params))
+    print(param_dict)
+
+    results[i + len(already_tested_params_combinations)] = {**param_dict, "results": []}
+
+    if param_dict["activation_function"] == "relu":
+        activation = nn.ReLU()
+    elif param_dict["activation_function"] == "sigmoid":
+        activation = nn.Sigmoid()
+    else:
+        raise ValueError(f"Unknown activation function: {param_dict['activation_function']}")
+    
+    if param_dict["pooling"] == "MaxPool":
+        pooling = nn.MaxPool2d(2)
+    elif param_dict["pooling"] == "AvgPool":
+        pooling = nn.AvgPool2d(2)
+    else:
+        raise ValueError(f"Unknown pooling layer: {param_dict['pooling']}")
+    
+    total_data_train = X_train.shape[0]
+    total_data_fold = total_data_train // k
+
+    for fold in range(k):
+
+        idxs_val_fold = list(range(fold*total_data_fold, (fold+1)*total_data_fold))
+        idxs_train_fold = list(set(range(total_data_train)) - set(idxs_val_fold))
+
+        X_val_fold = X_train[idxs_val_fold]
+        y_val_fold = y_train[idxs_val_fold]
+
+        X_train_fold = X_train[idxs_train_fold]
+        y_train_fold = y_train[idxs_train_fold]
+
+        # Define the network
+        cnn = CNN(
+            input_channels = 3,
+            num_classes = n_classes,
+            num_conv_layers = param_dict["n_conv_layers"],
+            conv_out_channels=param_dict["conv_out_channels"],
+            conv_kernel_size=param_dict["conv_kernel_size"],
+            conv_padding=param_dict["conv_padding"],
+            activation_function=activation,
+            pooling=pooling,
+            num_hidden_layers=param_dict["n_layers"],
+        )
+
+        # Define loss function and optimizer
+
+        if param_dict["loss_function"] == "Cross Entropy":
+            criterion = nn.CrossEntropyLoss()
+        elif param_dict["loss_function"] == "Multi Margin":
+            criterion = nn.MultiMarginLoss()
+        else:
+            raise ValueError(f"Unknown loss function: {loss_function}")
+                
+        optimizer = {
+            "ADAM": optim.Adam(cnn.parameters(), lr=param_dict["learning_rate"]),
+            "SGD": optim.SGD(cnn.parameters(), lr=param_dict["learning_rate"]),
+            "RMSprop": optim.RMSprop(cnn.parameters(), lr=param_dict["learning_rate"]),
+        }[param_dict["optimizer"]]
+
+        # Train the network
+        loss_values, trained_net = fit(X_train_fold,
+                                    y_train_fold.long(), 
+                                    cnn, 
+                                    criterion, 
+                                    optimizer, 
+                                    param_dict["n_epochs"], 
+                                    param_dict["batch_size"])
+
+        # Evaluate the network
+        conf_mat_train = evaluate_network(trained_net, X_train_fold, y_train_fold)
+        conf_mat_val = evaluate_network(trained_net, X_val_fold, y_val_fold)
+
+        val_loss = evaluate_loss(trained_net, X_val_fold, y_val_fold, criterion)
+
+        # Store results
+        results[i + len(already_tested_params_combinations)]["results"].append({
+            'loss_values': loss_values,
+            'val_loss': val_loss,
             'confusion_matrix_train': conf_mat_train.tolist(),
             'confusion_matrix_val': conf_mat_val.tolist(),
         })
