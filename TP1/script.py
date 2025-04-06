@@ -1137,3 +1137,11 @@ for i, params in tqdm(enumerate(param_combinations), total=total_combinations, d
 
     with open("results_cnn.json", "w") as f:
         json.dump(results, f, indent=4)
+
+
+conf_mat_test = evaluate_network(trained_net, X_test, y_test)
+
+results_test = {"confusion_matrix_test": conf_mat_test.tolist()}
+
+with open("results_test.json", "w") as f:
+    json.dump(results_test, f, indent=4)
