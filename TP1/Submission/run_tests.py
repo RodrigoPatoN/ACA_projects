@@ -28,7 +28,7 @@ if torch.backends.mps.is_available():
     device = torch.device("mps")
     print("Running on MPS")
 elif torch.cuda.is_available():
-    device = torch.device("cuda:1")
+    device = torch.device("cuda")
     print("Running on GPU")
 else:
     device = torch.device("cpu")
@@ -345,15 +345,6 @@ param_combinations = list(itertools.product(*param_values))
 results = {}
 k = 5
 
-#get the combinations which have already been tested
-already_tested_dnn = pd.read_json("results_dnn.json")
-already_tested_dnn = already_tested_dnn.transpose()
-
-already_tested_params_combinations = already_tested_dnn[param_names].values
-already_tested_params_combinations = [tuple(row) for row in already_tested_params_combinations]
-
-param_combinations = [params for params in param_combinations if params not in already_tested_params_combinations]
-
 # Loop over all hyperparameter combinations
 for i, params in enumerate(param_combinations):
 
@@ -517,15 +508,6 @@ parameters_test_cnn = {
 param_values = [v for v in parameters_test_cnn.values()]
 param_names = [k for k in parameters_test_cnn.keys()]
 param_combinations = list(itertools.product(*param_values))
-
-print(os.listdir("./"))
-
-already_tested_cnn = pd.read_json("results_cnn_1.json").T
-
-already_tested_params_combinations = already_tested_cnn[param_names].values
-already_tested_params_combinations = [tuple(row) for row in already_tested_params_combinations]
-
-param_combinations = [params for params in param_combinations if params not in already_tested_params_combinations]
 total_combinations = len(param_combinations)
 
 results = {}
@@ -639,8 +621,6 @@ results = {}
 
 for i, params in tqdm(enumerate(best_50_params), total=50, desc="Hyperparameter Search"):
 
-    break
-
     print(f"\nTesting combination {i+1}/{50}")
     param_dict = dict(zip(param_names, params))
     print(param_dict)
@@ -721,8 +701,6 @@ for i, params in tqdm(enumerate(best_50_params), total=50, desc="Hyperparameter 
 
 
 for i, params in tqdm(enumerate(best_50_params), total=50, desc="Hyperparameter Search"):
-
-    break
 
     print(f"\nTesting combination {i+1}/{total_combinations}")
     param_dict = dict(zip(param_names, params))
@@ -819,8 +797,6 @@ param_combinations = [params for params in best_50_params if params not in alrea
 total_combinations = len(param_combinations)
 
 for i, params in tqdm(enumerate(param_combinations), total=total_combinations, desc="Hyperparameter Search"):
-
-    break
 
     print(f"\nTesting combination {i+1}/{total_combinations}")
     param_dict = dict(zip(param_names, params))
@@ -935,8 +911,6 @@ param_combinations = list(itertools.product(*param_values))
 total_combinations = len(param_combinations)
 
 for i, params in tqdm(enumerate(param_combinations), total=total_combinations, desc="Hyperparameter Search"):
-
-    break
 
     print(f"\nTesting combination {i+1}/{total_combinations}")
     param_dict = dict(zip(param_names, params))
