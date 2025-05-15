@@ -10,13 +10,16 @@ run = {
 
 if run["VAE"]:
 
-    from models.autoencoders import VAE, generate_images_vae_dae 
+    from models import autoencoders 
 
-    vae = torch.load("models/vae.pth")
-    dae = torch.load("models/dae.pth")
+    vae = autoencoders.VAE(color_channels=3, latent_dim=128)
+    dae = autoencoders.DenoisingAutoencoder()
+
+    vae.load_state_dict(torch.load("models/vae.pth"))
+    dae.load_state_dict(torch.load("models/dae.pth"))
 
     # Generate images
-    generated, refined = generate_images_vae_dae(vae, dae, num_images=100, latent_dim=128)
+    generated, refined = autoencoders.generate_images_vae_dae(vae, dae, num_images=100, latent_dim=128)
 
     # Save generated images
     for i in range(len(generated)):
