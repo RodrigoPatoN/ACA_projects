@@ -35,22 +35,6 @@ n_classes = len(info['label'])
 
 DataClass = getattr(medmnist, info['python_class'])
 
-
-# preprocessing
-data_transform = transforms.Compose([
-    transforms.ToTensor(),
-])
-
-# Load all splits
-train = DataClass(split='train', transform=data_transform, download=True)
-val = DataClass(split='val', transform=data_transform, download=True)
-test = DataClass(split='test', transform=data_transform, download=True)
-
-# Combine them into a single dataset
-full_dataset = ConcatDataset([train, val, test])
-dataloader = DataLoader(full_dataset, batch_size=128, shuffle=True)
-
-
 # preprocessing
 data_transform = transforms.Compose([
     transforms.ToTensor(),
@@ -76,8 +60,8 @@ torch.manual_seed(seed)
 np.random.seed(seed)
 
 run = {
-    "VAE": False,
-    "GAN": True,
+    "VAE": True,
+    "GAN": False,
     "CGAN": False,
     "Diffusion": False,
 }
