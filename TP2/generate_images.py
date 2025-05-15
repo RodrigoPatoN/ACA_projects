@@ -26,6 +26,7 @@ if run["VAE"]:
         os.makedirs("generated_images", exist_ok=True)
         os.makedirs("generated_images/AE", exist_ok=True)
         os.makedirs("generated_images/AE/VAE", exist_ok=True)
+        os.makedirs("generated_images/AE/VAE_DAE", exist_ok=True)
         torch.save(generated[i], f"generated_images/AE/VAE/{i}.png")
         torch.save(refined[i], f"generated_images/AE/VAE_DAE/{i}.png")
 
