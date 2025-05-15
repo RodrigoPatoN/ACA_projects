@@ -1,5 +1,6 @@
 import torch
 import os
+from torchvision.utils import save_image
 
 run = {
     "VAE": True,
@@ -27,7 +28,7 @@ if run["VAE"]:
         os.makedirs("generated_images/AE", exist_ok=True)
         os.makedirs("generated_images/AE/VAE", exist_ok=True)
         os.makedirs("generated_images/AE/VAE_DAE", exist_ok=True)
-        torch.save(generated[i], f"generated_images/AE/VAE/{i}.png")
-        torch.save(refined[i], f"generated_images/AE/VAE_DAE/{i}.png")
+        save_image(generated[i], f"generated_images/AE/VAE/{i}.png")
+        save_image(refined[i], f"generated_images/AE/VAE_DAE/{i}.png")
 
     print("Generated images saved to 'generated_images/' directory.")
