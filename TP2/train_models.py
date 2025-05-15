@@ -17,9 +17,6 @@ import torchvision.transforms.functional as F
 import medmnist
 from medmnist import INFO, Evaluator
 
-from .autoencoders import Autoencoder_Linear
-
-
 # -------------------------------- Load Dataset --------------------------------
 
 print(f"MedMNIST v{medmnist.__version__} @ {medmnist.HOMEPAGE}")
