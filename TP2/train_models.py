@@ -72,20 +72,20 @@ run = {
 
 if run["VAE"]:
     
-    from .models.autoencoders import VAE, train_vae, generate_images_vae_dae, DenoisingAutoencoder, train_dae, plot_images
+    from .models import autoencoders
 
-    vae = VAE(color_channels=3, latent_dim=128)
-    train_vae(vae, dataloader, device=device, epochs=30)     
+    vae = autoencoders.VAE(color_channels=3, latent_dim=128)
+    autoencoders.train_vae(vae, dataloader, device=device, epochs=30)     
 
-    dae = DenoisingAutoencoder()
-    dae = train_dae(dae, dataloader, device=device, epochs=20)
+    dae = autoencoders.DenoisingAutoencoder()
+    dae = autoencoders.train_dae(dae, dataloader, device=device, epochs=20)
 
     torch.save(vae.state_dict(), 'vae_model.pth')
     torch.save(dae.state_dict(), 'dae_model.pth')
     print("VAE and DAE models saved.")
 
-    vae_out, dae_out = generate_images_vae_dae(vae, dae, num_images=16, latent_dim=128, device=device)
-    plot_images(vae_out, dae_out)
+    #vae_out, dae_out = autoencoders.generate_images_vae_dae(vae, dae, num_images=16, latent_dim=128, device=device)
+    #plot_images(vae_out, dae_out)
 
 # -------------------------------- GAN --------------------------------
 
