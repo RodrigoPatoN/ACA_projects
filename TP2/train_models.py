@@ -69,7 +69,7 @@ run = {
 
 if run["VAE"]:
     
-    from .models import autoencoders
+    from models import autoencoders
 
     vae = autoencoders.VAE(color_channels=3, latent_dim=128)
     autoencoders.train_vae(vae, dataloader, device=device, epochs=30)     
@@ -88,7 +88,7 @@ if run["VAE"]:
 
 if run["GAN"]:
 
-    from .models import gans
+    from models import gans
     from torchvision.utils import save_image
 
     netG = gans.Generator().to(device)
@@ -174,7 +174,7 @@ if run["GAN"]:
 
 if run["CGAN"]:
 
-    from .models import cgans
+    from models import cgans
 
     netG = cgans.Generator().to(device)
     netD = cgans.Discriminator().to(device)
