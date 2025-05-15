@@ -9,6 +9,8 @@ run = {
     "Diffusion": False,
 }
 
+num_images = 10000
+
 if run["VAE"]:
 
     from models import autoencoders 
@@ -20,7 +22,7 @@ if run["VAE"]:
     dae.load_state_dict(torch.load("models/dae.pth"))
 
     # Generate images
-    generated, refined = autoencoders.generate_images_vae_dae(vae, dae, num_images=100, latent_dim=128)
+    generated, refined = autoencoders.generate_images_vae_dae(vae, dae, num_images=num_images, latent_dim=128)
 
     # Save generated images
     for i in range(len(generated)):

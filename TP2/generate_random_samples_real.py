@@ -42,7 +42,7 @@ test = DataClass(split='test', transform=data_transform, download=True)
 # Combine them into a single dataset
 full_dataset = ConcatDataset([train, val, test])
 
-# -------------------------------- Setup --------------------------------
+# -------------------------------- Setup --------------------------------   
 
 # set random seed for reproducibility
 SEEDS = [42, 123, 2024, 7, 888]
