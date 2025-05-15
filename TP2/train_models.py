@@ -33,7 +33,12 @@ n_classes = len(info['label'])
 DataClass = getattr(medmnist, info['python_class'])
 
 # preprocessing
+#data_transform = transforms.Compose([
+#    transforms.ToTensor(),
+#])
+
 data_transform = transforms.Compose([
+    transforms.Resize((32, 32)),
     transforms.ToTensor(),
 ])
 
