@@ -34,3 +34,38 @@ if run["VAE"]:
         save_image(refined[i], f"generated_images/AE/VAE_DAE/{i}.png")
 
     print("Generated images saved to 'generated_images/' directory.")
+
+elif run["GAN"]:
+    pass
+
+elif run["CGAN"]:
+    pass
+
+elif run["Diffusion"]:
+
+    from models import diffusion_models
+
+    best_model = diffusion_models.MyDDPM(diffusion_models.MyUNet(), n_steps=n_steps, device=device)
+    best_model.load_state_dict(torch.load(store_path, map_location=device))
+    best_model.eval()
+    print("Model loaded")
+
+    print("Generating new images")
+    generated = diffusion_models.generate_new_images(
+            best_model,
+            option = 1,
+            n_samples=16,# change the number of samples as needed
+            device=device,
+            gif_name="test.gif"
+        )
+    #diffusion_models.show_images(generated, "Final Option 1 result")
+
+
+    print("Generating new images")
+    generated = diffusion_models.generate_new_images(
+            best_model,
+            option = 1,
+            n_samples=16,# change the number of samples as needed
+            device=device,
+            gif_name="test.gif"
+        )

@@ -70,6 +70,55 @@ run = {
 
 # -------------------------------- Autoencoder --------------------------------
 
+chosen = False
+
+
+while not chosen:
+
+    print("SELECT MODEL TO TRAIN:\n\n1. VAE\n2.GAN\n3.CGAN\n4.Diffusion\n5.ALL\n")
+    model_choice = input("Enter your choice (1/2/3/4/5): ")
+    chosen = True
+
+    if model_choice == "1":
+
+        run["VAE"] = True
+        run["GAN"] = False
+        run["CGAN"] = False
+        run["Diffusion"] = False
+
+    elif model_choice == "2":
+
+        run["VAE"] = False
+        run["GAN"] = True
+        run["CGAN"] = False
+        run["Diffusion"] = False
+
+    elif model_choice == "3":
+
+        run["VAE"] = False
+        run["GAN"] = False
+        run["CGAN"] = True
+        run["Diffusion"] = False
+
+    elif model_choice == "4":
+
+        run["VAE"] = False
+        run["GAN"] = False
+        run["CGAN"] = False
+        run["Diffusion"] = True
+
+    elif model_choice == "5":
+
+        run["VAE"] = True
+        run["GAN"] = True
+        run["CGAN"] = True
+        run["Diffusion"] = True
+
+    else:
+        print("Invalid choice.")
+        chosen = False
+        
+
 # Code for autoencoder will go here
 
 if run["VAE"]:
@@ -169,8 +218,8 @@ if run["GAN"]:
         with torch.no_grad():
             fixed_noise = torch.randn(5, latent_dim, 1, 1, device=device)
             fake = netG(fixed_noise).detach().cpu()
-            os.makedirs('output', exist_ok=True)
-            save_image(fake, f'output/fake_samples_epoch_{epoch:03d}.png', normalize=True)
+            os.makedirs('output_training', exist_ok=True)
+            save_image(fake, f'output_training/fake_samples_epoch_{epoch:03d}.png', normalize=True)
 
     print("Training complete.")
 
@@ -263,8 +312,8 @@ if run["CGAN"]:
             fixed_noise = torch.randn(5, latent_dim, 1, 1, device=device)
             fixed_labels = torch.randint(3, 5, (5,), device=device)
             fake = netG(fixed_noise, fixed_labels).detach().cpu()
-            os.makedirs('output', exist_ok=True)
-            save_image(fake, f'output/fake_samples_epoch_{epoch:03d}.png', normalize=True)
+            os.makedirs('output_training', exist_ok=True)
+            save_image(fake, f'output_training/fake_samples_epoch_{epoch:03d}.png', normalize=True)
 
     print("Training complete.")
 
@@ -293,30 +342,3 @@ if run["Diffusion"]:
     store_path = "diff_model.pt"
     if not no_train:
         diffusion_models.training_loop(ddpm, dataloader, n_epochs, optim=Adam(ddpm.parameters(), lr), device=device, store_path=store_path)
-
-    best_model = diffusion_models.MyDDPM(diffusion_models.MyUNet(), n_steps=n_steps, device=device)
-    best_model.load_state_dict(torch.load(store_path, map_location=device))
-    best_model.eval()
-    print("Model loaded")
-
-    print("Generating new images")
-    generated = diffusion_models.generate_new_images(
-            best_model,
-            option = 1,
-            n_samples=16,# change the number of samples as needed
-            device=device,
-            gif_name="test.gif"
-        )
-    #diffusion_models.show_images(generated, "Final Option 1 result")
-
-
-    print("Generating new images")
-    generated = diffusion_models.generate_new_images(
-            best_model,
-            option = 1,
-            n_samples=16,# change the number of samples as needed
-            device=device,
-            gif_name="test.gif"
-        )
-    
-    #diffusion_models.show_images(generated, "Final Option 1 result")
