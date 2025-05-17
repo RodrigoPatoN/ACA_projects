@@ -223,15 +223,15 @@ if run["GAN"]:
 
     print("Training complete.")
 
-    torch.save(netG.state_dict(), './netG.pth')
-    torch.save(netD.state_dict(), './netD.pth')
+    torch.save(netG.state_dict(), './models/GAN_netG.pth')
+    torch.save(netD.state_dict(), './models/GAN_netD.pth')
 
 if run["CGAN"]:
 
     from models import cgans
 
-    netG = cgans.Generator().to(device)
-    netD = cgans.Discriminator().to(device)
+    netG = cgans.Generator(num_classes=8).to(device)
+    netD = cgans.Discriminator(num_classes=8).to(device)
 
     # still need to define whether i will touch the hyperparameters or not
     optimizerD = optim.Adam(netD.parameters(), lr=0.0002, betas=(0.5, 0.999))
@@ -317,8 +317,8 @@ if run["CGAN"]:
 
     print("Training complete.")
 
-    torch.save(netG.state_dict(), './netG_CGAN.pth')
-    torch.save(netD.state_dict(), './netD_CGAN.pth')
+    torch.save(netG.state_dict(), './models/CGAN_netG.pth')
+    torch.save(netD.state_dict(), './models/CGAN_netD.pth')
 
 # -------------------------------- Diffusion --------------------------------
 

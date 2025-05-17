@@ -4,7 +4,7 @@ import numpy as np
 
 
 class Generator(nn.Module):
-    def __init__(self, latent_dim=100, num_classes=2):
+    def __init__(self, latent_dim=100, num_classes=10):
         super(Generator, self).__init__()
         self.label_emb = nn.Embedding(num_classes, num_classes)
 
