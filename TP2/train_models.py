@@ -227,7 +227,8 @@ if run["GAN"]:
 if run["CGAN"]:
 
     from models import cgans
-
+    from torchvision.utils import save_image
+    
     netG = cgans.Generator(num_classes=8).to(device)
     netD = cgans.Discriminator(num_classes=8).to(device)
 
