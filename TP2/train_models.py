@@ -228,7 +228,7 @@ if run["CGAN"]:
 
     from models import cgans
     from torchvision.utils import save_image
-    
+
     netG = cgans.Generator(num_classes=8).to(device)
     netD = cgans.Discriminator(num_classes=8).to(device)
 
@@ -323,7 +323,7 @@ if run["CGAN"]:
 
 if run["Diffusion"]:
 
-    from .models import diffusion_models 
+    from models import diffusion_models 
     from torch.optim import Adam
 
     no_train = False
