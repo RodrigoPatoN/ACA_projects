@@ -18,7 +18,7 @@ chosen = False
 
 while not chosen:
 
-    print("SELECT MODEL TO TRAIN:\n\n1. VAE\n2.GAN\n3.CGAN\n4.Diffusion\n5.ALL\n")
+    print("SELECT MODEL TO TRAIN:\n\n1.VAE\n2.GAN\n3.CGAN\n4.Diffusion\n5.ALL\n")
     model_choice = input("Enter your choice (1/2/3/4/5): ")
     chosen = True
 
@@ -60,7 +60,7 @@ while not chosen:
     else:
         print("Invalid choice.")
         chosen = False
-        
+
 
 if run["VAE"]:
 
