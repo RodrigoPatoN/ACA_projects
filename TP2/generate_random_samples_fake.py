@@ -42,7 +42,7 @@ elif run["GAN"]:
     from models import gans
 
     generator = gans.Generator()
-    generator.load_state_dict(torch.load("models/netG_CGAN.pth", map_location=device))
+    generator.load_state_dict(torch.load("models/GAN_netG.pth", map_location=device))
 
     images = gans.generate_images(generator, num_images=num_images, device=device)
 
