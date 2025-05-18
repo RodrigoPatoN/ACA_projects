@@ -212,25 +212,25 @@ class MyUNet(nn.Module):
         # First half
         self.te1 = self._make_te(time_emb_dim, 1)
         self.b1 = nn.Sequential(
-            MyBlock((1, 28, 28), 1, 10),
-            MyBlock((10, 28, 28), 10, 10),
-            MyBlock((10, 28, 28), 10, 10)
+            MyBlock((3, 32, 32), 3, 10),
+            MyBlock((10, 32, 32), 10, 10),
+            MyBlock((10, 32, 32), 10, 10)
         )
         self.down1 = nn.Conv2d(10, 10, 4, 2, 1)
 
         self.te2 = self._make_te(time_emb_dim, 10)
         self.b2 = nn.Sequential(
-            MyBlock((10, 14, 14), 10, 20),
-            MyBlock((20, 14, 14), 20, 20),
-            MyBlock((20, 14, 14), 20, 20)
+            MyBlock((10, 16, 16), 10, 20),
+            MyBlock((20, 16, 16), 20, 20),
+            MyBlock((20, 16, 16), 20, 20)
         )
         self.down2 = nn.Conv2d(20, 20, 4, 2, 1)
 
         self.te3 = self._make_te(time_emb_dim, 20)
         self.b3 = nn.Sequential(
-            MyBlock((20, 7, 7), 20, 40),
-            MyBlock((40, 7, 7), 40, 40),
-            MyBlock((40, 7, 7), 40, 40)
+            MyBlock((20, 8, 8), 20, 40),
+            MyBlock((40, 8, 8), 40, 40),
+            MyBlock((40, 8, 8), 40, 40)
         )
         self.down3 = nn.Sequential(
             nn.Conv2d(40, 40, 2, 1),
@@ -248,32 +248,32 @@ class MyUNet(nn.Module):
 
         # Second half
         self.up1 = nn.Sequential(
-            nn.ConvTranspose2d(40, 40, 4, 2, 1),
+            nn.ConvTranspose2d(40, 40, 4, 2, 1, output_padding=1),
             nn.SiLU(),
             nn.ConvTranspose2d(40, 40, 2, 1)
         )
 
         self.te4 = self._make_te(time_emb_dim, 80)
         self.b4 = nn.Sequential(
-            MyBlock((80, 7, 7), 80, 40),
-            MyBlock((40, 7, 7), 40, 20),
-            MyBlock((20, 7, 7), 20, 20)
+            MyBlock((80, 8, 8), 80, 40),
+            MyBlock((40, 8, 8), 40, 20),
+            MyBlock((20, 8, 8), 20, 20)
         )
 
         self.up2 = nn.ConvTranspose2d(20, 20, 4, 2, 1)
         self.te5 = self._make_te(time_emb_dim, 40)
         self.b5 = nn.Sequential(
-            MyBlock((40, 14, 14), 40, 20),
-            MyBlock((20, 14, 14), 20, 10),
-            MyBlock((10, 14, 14), 10, 10)
+            MyBlock((40, 16, 16), 40, 20),
+            MyBlock((20, 16, 16), 20, 10),
+            MyBlock((10, 16, 16), 10, 10)
         )
 
         self.up3 = nn.ConvTranspose2d(10, 10, 4, 2, 1)
         self.te_out = self._make_te(time_emb_dim, 20)
         self.b_out = nn.Sequential(
-            MyBlock((20, 28, 28), 20, 10),
-            MyBlock((10, 28, 28), 10, 10),
-            MyBlock((10, 28, 28), 10, 10, normalize=False)
+            MyBlock((20, 32, 32), 20, 10),
+            MyBlock((10, 32, 32), 10, 10),
+            MyBlock((10, 32, 32), 10, 10, normalize=False)
         )
 
         self.conv_out = nn.Conv2d(10, 1, 3, 1, 1)
