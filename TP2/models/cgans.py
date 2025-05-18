@@ -51,7 +51,8 @@ class Discriminator(nn.Module):
         )
 
     def forward(self, img, labels):
-        label_embedding = self.label_emb(labels).unsqueeze(2).unsqueeze(3)  # [B, C, 1, 1]
+        label_embedding = self.label_emb(labels)  # [B, num_classes]
+        label_embedding = label_embedding.view(label_embedding.size(0), label_embedding.size(1), 1, 1)  # [B, C, 1, 1]
         label_embedding = label_embedding.expand(-1, -1, img.size(2), img.size(3))  # [B, C, H, W]
         input = torch.cat((img, label_embedding), dim=1)  # Concatenate on channels
         return self.model(input).view(-1, 1).squeeze(1)
