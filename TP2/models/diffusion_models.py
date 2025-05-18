@@ -98,7 +98,7 @@ def show_forward(ddpm, loader, device):
         break
 
 
-def generate_new_images(ddpm,n_samples=16, option=1, device=None, frames_per_gif=100, gif_name="sampling.gif", c=1, h=28, w=28):
+def generate_new_images(ddpm,n_samples=16, option=1, device=None, frames_per_gif=100, gif_name="sampling.gif", c=3, h=32, w=32):
     """Given a DDPM model, a number of samples to be generated and a device, returns some newly generated samples"""
     frame_idxs = np.linspace(0, ddpm.n_steps, frames_per_gif).astype(np.uint)
     frames = []
