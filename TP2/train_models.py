@@ -338,6 +338,6 @@ if run["Diffusion"]:
     print(sum([p.numel() for p in ddpm.parameters()]))
 
     # Training
-    store_path = "diff_model.pt"
+    store_path = "./models/diff_model.pt"
     if not no_train:
         diffusion_models.training_loop(ddpm, dataloader, n_epochs, optim=Adam(ddpm.parameters(), lr), device=device, store_path=store_path)

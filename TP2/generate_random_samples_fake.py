@@ -124,7 +124,7 @@ elif run["Diffusion"]:
     from models import diffusion_models 
 
     best_model = diffusion_models.MyDDPM(diffusion_models.MyUNet(), n_steps=1000, device=device)
-    best_model.load_state_dict(torch.load('./models/netG_CGAN.pth', map_location=device))
+    best_model.load_state_dict(torch.load('./models/diff_model.pt', map_location=device))
     best_model.eval()
     print("Model loaded")
 
