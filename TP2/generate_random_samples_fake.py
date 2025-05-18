@@ -13,6 +13,55 @@ num_images = 10000
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+chosen = False
+
+
+while not chosen:
+
+    print("SELECT MODEL TO TRAIN:\n\n1. VAE\n2.GAN\n3.CGAN\n4.Diffusion\n5.ALL\n")
+    model_choice = input("Enter your choice (1/2/3/4/5): ")
+    chosen = True
+
+    if model_choice == "1":
+
+        run["VAE"] = True
+        run["GAN"] = False
+        run["CGAN"] = False
+        run["Diffusion"] = False
+
+    elif model_choice == "2":
+
+        run["VAE"] = False
+        run["GAN"] = True
+        run["CGAN"] = False
+        run["Diffusion"] = False
+
+    elif model_choice == "3":
+
+        run["VAE"] = False
+        run["GAN"] = False
+        run["CGAN"] = True
+        run["Diffusion"] = False
+
+    elif model_choice == "4":
+
+        run["VAE"] = False
+        run["GAN"] = False
+        run["CGAN"] = False
+        run["Diffusion"] = True
+
+    elif model_choice == "5":
+
+        run["VAE"] = True
+        run["GAN"] = True
+        run["CGAN"] = True
+        run["Diffusion"] = True
+
+    else:
+        print("Invalid choice.")
+        chosen = False
+        
+
 if run["VAE"]:
 
     from models import autoencoders 
@@ -43,6 +92,8 @@ elif run["GAN"]:
 
     generator = gans.Generator()
     generator.load_state_dict(torch.load("models/GAN_netG.pth", map_location=device))
+
+    generator.to(device)
 
     images = gans.generate_images(generator, num_images=num_images, device=device)
 
