@@ -146,21 +146,25 @@ if run["GAN"]:
     netG = gans.Generator().to(device)
     netD = gans.Discriminator().to(device)
 
+    learning_rate = 0.001
+
     # still need to define whether i will touch the hyperparameters or not
-    optimizerD = optim.Adam(netD.parameters(), lr=0.0002, betas=(0.5, 0.999))
-    optimizerG = optim.Adam(netG.parameters(), lr=0.0002, betas=(0.5, 0.999))
+    optimizerD = optim.Adam(netD.parameters(), lr=learning_rate, betas=(0.5, 0.999))
+    optimizerG = optim.Adam(netG.parameters(), lr=learning_rate, betas=(0.5, 0.999))
 
     criterion = nn.BCELoss()
 
     latent_dim = 100
     batch_size = 128
-    num_epochs = 20
+    num_epochs = 300
     k = 1
 
     real_label = 1
     fake_label = 0
 
     criterion = nn.BCELoss()
+
+    losses = []
 
     for epoch in range(num_epochs):
         for i, (data, _) in enumerate(dataloader):
@@ -212,12 +216,19 @@ if run["GAN"]:
             if i % 40 == 0:
                 print(f"[{epoch}/{num_epochs}][{i}/{len(dataloader)}] Loss_D: {lossD.item():.4f} Loss_G: {lossG.item():.4f}")
 
+        losses.append(lossG.item())
+
         # Save generated samples at the end of each epoch
         with torch.no_grad():
             fixed_noise = torch.randn(5, latent_dim, 1, 1, device=device)
             fake = netG(fixed_noise).detach().cpu()
             os.makedirs('output_training', exist_ok=True)
             save_image(fake, f'output_training/fake_samples_epoch_{epoch:03d}.png', normalize=True)
+
+    # save losses
+    with open(f'losses_GAN_{learning_rate}.txt', 'w') as f:
+        for loss in losses:
+            f.write(f"{loss}\n")
 
     print("Training complete.")
 
@@ -232,15 +243,16 @@ if run["CGAN"]:
     netG = cgans.Generator(num_classes=8).to(device)
     netD = cgans.Discriminator(num_classes=8).to(device)
 
-    # still need to define whether i will touch the hyperparameters or not
-    optimizerD = optim.Adam(netD.parameters(), lr=0.0002, betas=(0.5, 0.999))
-    optimizerG = optim.Adam(netG.parameters(), lr=0.0002, betas=(0.5, 0.999))
+    learning_rate = 0.001
+
+    optimizerD = optim.Adam(netD.parameters(), lr=learning_rate, betas=(0.5, 0.999))
+    optimizerG = optim.Adam(netG.parameters(), lr=learning_rate, betas=(0.5, 0.999))
 
     criterion = nn.BCELoss()
 
     latent_dim = 100
     batch_size = 128
-    num_epochs = 20
+    num_epochs = 300
     k = 1
 
     real_label = 1
@@ -248,13 +260,7 @@ if run["CGAN"]:
 
     criterion = nn.BCELoss()
 
-    latent_dim = 100
-    batch_size = 128
-    num_epochs = 100
-    k = 1
-
-    real_label = 1
-    fake_label = 0
+    losses = []
 
     for epoch in range(num_epochs):
         for i, (data, label) in enumerate(dataloader):
@@ -306,6 +312,7 @@ if run["CGAN"]:
             if i % 40 == 0:
                 print(f"[{epoch}/{num_epochs}][{i}/{len(dataloader)}] Loss_D: {lossD.item():.4f} Loss_G: {lossG.item():.4f}")
 
+        losses.append(lossG.item())
         # Save generated samples at the end of each epoch
         with torch.no_grad():
             fixed_noise = torch.randn(5, latent_dim, 1, 1, device=device)
@@ -315,6 +322,11 @@ if run["CGAN"]:
             save_image(fake, f'output_training/fake_samples_epoch_{epoch:03d}.png', normalize=True)
 
     print("Training complete.")
+
+        # save losses
+    with open(f'losses_GAN_{learning_rate}.txt', 'w') as f:
+        for loss in losses:
+            f.write(f"{loss}\n")
 
     torch.save(netG.state_dict(), './models/CGAN_netG.pth')
     torch.save(netD.state_dict(), './models/CGAN_netD.pth')
@@ -328,7 +340,7 @@ if run["Diffusion"]:
 
     no_train = False
     batch_size = 128
-    n_epochs = 10
+    n_epochs = 100
     lr = 0.001
 
     # Defining model
@@ -340,4 +352,4 @@ if run["Diffusion"]:
     # Training
     store_path = "./models/diff_model.pt"
     if not no_train:
-        diffusion_models.training_loop(ddpm, dataloader, n_epochs, optim=Adam(ddpm.parameters(), lr), device=device, store_path=store_path)
+        diffusion_models.training_loop(ddpm, dataloader, n_epochs, optim=Adam(ddpm.parameters(), lr), device=device, store_path=store_path, learning_rate=lr)

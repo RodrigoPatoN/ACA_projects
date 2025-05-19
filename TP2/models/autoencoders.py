@@ -88,9 +88,11 @@ def vae_loss_function(recon_x, x, mu, log_var):
     return recon_loss + kl_loss
 
 
-def train_vae(model, dataloader, device='cpu', epochs=20):
+def train_vae(model, dataloader, learning_rate=0.01, device='cpu', epochs=300):
     model.to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+
+    losses = []
 
     for epoch in range(epochs):
         model.train()
@@ -109,6 +111,14 @@ def train_vae(model, dataloader, device='cpu', epochs=20):
             optimizer.step()
             total_loss += loss.item()
         print(f"Epoch [{epoch+1}/{epochs}] VAE Loss: {total_loss/len(dataloader.dataset):.4f}")
+
+        losses.append(total_loss / len(dataloader.dataset))
+
+    # save losses
+    with open(f"vae_losses_{learning_rate}.txt", "w") as f:
+        for loss in losses:
+            f.write(f"{loss}\n")
+
     return model.cpu()
 
 
@@ -162,10 +172,13 @@ class DenoisingAutoencoder(nn.Module):
         return self.decoder(x)
 
 
-def train_dae(model, dataloader, device='cpu', epochs=10):
+def train_dae(model, dataloader, device='cpu', learning_rate=0.01, epochs=300):
+
     model.to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     criterion = nn.MSELoss()
+
+    losses = []
 
     for epoch in range(epochs):
         model.train()
@@ -181,6 +194,12 @@ def train_dae(model, dataloader, device='cpu', epochs=10):
             optimizer.step()
             total_loss += loss.item()
         print(f"Epoch [{epoch+1}/{epochs}] DAE Loss: {total_loss/len(dataloader):.4f}")
+        losses.append(total_loss / len(dataloader))
+    
+    with open(f"dae_losses_{learning_rate}.txt", "w") as f:
+        for loss in losses:
+            f.write(f"{loss}\n")
+            
     return model.cpu()
 
 

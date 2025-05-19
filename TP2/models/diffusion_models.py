@@ -309,10 +309,13 @@ class MyUNet(nn.Module):
         )
     
 
-def training_loop(ddpm, loader, n_epochs, optim, device, display=False, store_path="ddpm_model.pt"):
+def training_loop(ddpm, loader, n_epochs, optim, device, display=False, store_path="ddpm_model.pt", learning_rate=0.01):
+
     mse = nn.MSELoss()
     best_loss = float("inf")
     n_steps = ddpm.n_steps
+
+    losses = []
 
     for epoch in tqdm(range(n_epochs), desc="Training progress", colour="#00ff00"):
         ddpm.train()  # Set model to training mode
@@ -355,3 +358,9 @@ def training_loop(ddpm, loader, n_epochs, optim, device, display=False, store_pa
             log_string += " --> Best model ever (stored)"
 
         print(log_string)
+
+    losses.append(epoch_loss)
+
+    with open(f"losses_DDPM_{learning_rate}.txt", "w") as f:
+        for loss in losses:
+            f.write(f"{loss}\n")
