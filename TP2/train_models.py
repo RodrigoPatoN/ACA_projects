@@ -124,10 +124,10 @@ if run["VAE"]:
     from models import autoencoders
 
     vae = autoencoders.VAE(color_channels=3, latent_dim=128)
-    autoencoders.train_vae(vae, dataloader, device=device, epochs=30)     
+    autoencoders.train_vae(vae, dataloader, device=device, epochs=300)     
 
     dae = autoencoders.DenoisingAutoencoder()
-    dae = autoencoders.train_dae(dae, dataloader, device=device, epochs=20)
+    dae = autoencoders.train_dae(dae, dataloader, device=device, epochs=300)
 
     torch.save(vae.state_dict(), 'vae_model.pth')
     torch.save(dae.state_dict(), 'dae_model.pth')
