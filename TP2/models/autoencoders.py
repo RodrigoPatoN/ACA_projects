@@ -88,7 +88,7 @@ def vae_loss_function(recon_x, x, mu, log_var):
     return recon_loss + kl_loss
 
 
-def train_vae(model, dataloader, learning_rate=0.01, device='cpu', epochs=300):
+def train_vae(model, dataloader, learning_rate=0.001, device='cpu', epochs=300):
     model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -106,7 +106,11 @@ def train_vae(model, dataloader, learning_rate=0.01, device='cpu', epochs=300):
             # Loss: MSE + KL
             recon_loss = F.mse_loss(recon, x, reduction='sum')
             kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-            loss = recon_loss + kl_loss
+
+            beta = min(1.0, epoch / 100)
+            loss = recon_loss + beta * kl_loss
+
+            #loss = recon_loss + kl_loss
 
             optimizer.zero_grad()
             loss.backward()
