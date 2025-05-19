@@ -110,7 +110,7 @@ def train_vae(model, dataloader, learning_rate=0.01, device='cpu', epochs=300):
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
-        print(f"Epoch [{epoch+1}/{epochs}] VAE Loss: {total_loss/len(dataloader.dataset):.4f}")
+        print(f"Epoch [{epoch+1}/{epochs}] VAE Loss: {total_loss/len(dataloader.dataset):.4f} - Reconstruction Loss: {recon_loss.item()/len(dataloader.dataset):.4f} - KL Loss: {kl_loss.item()/len(dataloader.dataset):.4f}")
 
         losses.append(total_loss / len(dataloader.dataset))
 
@@ -199,7 +199,7 @@ def train_dae(model, dataloader, device='cpu', learning_rate=0.01, epochs=300):
     with open(f"dae_losses_{learning_rate}.txt", "w") as f:
         for loss in losses:
             f.write(f"{loss}\n")
-            
+
     return model.cpu()
 
 
