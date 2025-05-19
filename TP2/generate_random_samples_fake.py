@@ -1,6 +1,7 @@
 import torch
 import os
 from torchvision.utils import save_image
+import numpy as np
 
 run = {
     "VAE": True,
@@ -10,6 +11,7 @@ run = {
 }
 
 num_images = 10000
+SEEDS = [42, 123, 2024, 7, 888]
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -62,88 +64,101 @@ while not chosen:
         chosen = False
 
 
-if run["VAE"]:
+for seed_num, seed in enumerate(SEEDS):
 
-    from models import autoencoders 
+    torch.manual_seed(seed)
+    np.random.seed(seed)
 
-    vae = autoencoders.VAE(color_channels=3, latent_dim=128)
-    dae = autoencoders.DenoisingAutoencoder()
+    print(f"Using seed {seed} for random sampling.")
 
-    vae.load_state_dict(torch.load("models/vae.pth"))
-    dae.load_state_dict(torch.load("models/dae.pth"))
+    if run["VAE"]:
 
-    # Generate images
-    generated, refined = autoencoders.generate_images_vae_dae(vae, dae, num_images=num_images, latent_dim=128)
+        from models import autoencoders 
 
-    # Save generated images
-    for i in range(len(generated)):
-        os.makedirs("generated_images", exist_ok=True)
-        os.makedirs("generated_images/AE", exist_ok=True)
-        os.makedirs("generated_images/AE/VAE", exist_ok=True)
-        os.makedirs("generated_images/AE/VAE_DAE", exist_ok=True)
-        save_image(generated[i], f"generated_images/AE/VAE/{i}.png")
-        save_image(refined[i], f"generated_images/AE/VAE_DAE/{i}.png")
+        vae = autoencoders.VAE(color_channels=3, latent_dim=128)
+        dae = autoencoders.DenoisingAutoencoder()
 
-    print("Generated AE images saved to 'generated_images/' directory.")
+        vae.load_state_dict(torch.load("models/vae.pth"))
+        dae.load_state_dict(torch.load("models/dae.pth"))
 
-elif run["GAN"]:
+        # Generate images
+        generated, refined = autoencoders.generate_images_vae_dae(vae, dae, num_images=num_images, latent_dim=128, random_seed=seed)
 
-    from models import gans
+        # Save generated images
+        for i in range(len(generated)):
 
-    generator = gans.Generator()
-    generator.load_state_dict(torch.load("models/GAN_netG.pth", map_location=device))
+            os.makedirs("generated_images", exist_ok=True)
+            os.makedirs("generated_images/AE", exist_ok=True)
 
-    generator.to(device)
+            os.makedirs("generated_images/AE/VAE", exist_ok=True)
+            os.makedirs(f"generated_images/AE/VAE/{seed_num}", exist_ok=True)
 
-    images = gans.generate_images(generator, num_images=num_images, device=device)
+            os.makedirs("generated_images/AE/VAE_DAE", exist_ok=True)
+            os.makedirs(f"generated_images/AE/VAE_DAE/{seed_num}", exist_ok=True)
 
-    # Save generated images
-    for i in range(len(images)):
-        os.makedirs("generated_images", exist_ok=True)
-        os.makedirs("generated_images/GAN", exist_ok=True)
-        save_image(images[i], f"generated_images/GAN/{i}.png")
+            save_image(generated[i], f"generated_images/AE/VAE/{seed_num}/{i}.png")
+            save_image(refined[i], f"generated_images/AE/VAE_DAE/{seed_num}/{i}.png")
 
-    print("Generated GAN images saved to 'generated_images/' directory.")
+        print("Generated AE images saved to 'generated_images/' directory.")
 
-elif run["CGAN"]:
+    elif run["GAN"]:
 
-    from models import cgans
+        from models import gans
 
-    images = cgans.generate_images(num_images=num_images, latent_dim=128)
+        generator = gans.Generator()
+        generator.load_state_dict(torch.load("models/GAN_netG.pth", map_location=device))
 
-    # Save generated images
-    for i in range(len(images)):
-        os.makedirs("generated_images", exist_ok=True)
-        os.makedirs("generated_images/CGAN", exist_ok=True)
-        save_image(images[i], f"generated_images/CGAN/{i}.png")
+        generator.to(device)
 
-    print("Generated CGAN images saved to 'generated_images/' directory.")
+        images = gans.generate_images(generator, num_images=num_images, device=device)
 
-elif run["Diffusion"]:
+        # Save generated images
+        for i in range(len(images)):
+            os.makedirs("generated_images", exist_ok=True)
+            os.makedirs("generated_images/GAN", exist_ok=True)
+            save_image(images[i], f"generated_images/GAN/{i}.png")
 
-    from models import diffusion_models 
+        print("Generated GAN images saved to 'generated_images/' directory.")
 
-    best_model = diffusion_models.MyDDPM(diffusion_models.MyUNet(), n_steps=1000, device=device)
-    best_model.load_state_dict(torch.load('./models/diff_model.pt', map_location=device))
-    best_model.eval()
-    print("Model loaded")
+    elif run["CGAN"]:
 
-    print("Generating new images")
-    generated = diffusion_models.generate_new_images(
-            best_model,
-            option = 1,
-            n_samples=16,# change the number of samples as needed
-            device=device,
-            gif_name="test.gif"
-        )
-    #diffusion_models.show_images(generated, "Final Option 1 result")
+        from models import cgans
+
+        images = cgans.generate_images(num_images=num_images, latent_dim=128)
+
+        # Save generated images
+        for i in range(len(images)):
+            os.makedirs("generated_images", exist_ok=True)
+            os.makedirs("generated_images/CGAN", exist_ok=True)
+            save_image(images[i], f"generated_images/CGAN/{i}.png")
+
+        print("Generated CGAN images saved to 'generated_images/' directory.")
+
+    elif run["Diffusion"]:
+
+        from models import diffusion_models 
+
+        best_model = diffusion_models.MyDDPM(diffusion_models.MyUNet(), n_steps=1000, device=device)
+        best_model.load_state_dict(torch.load('./models/diff_model.pt', map_location=device))
+        best_model.eval()
+        print("Model loaded")
+
+        print("Generating new images")
+        generated = diffusion_models.generate_new_images(
+                best_model,
+                option = 1,
+                n_samples=16,# change the number of samples as needed
+                device=device,
+                gif_name="test.gif"
+            )
+        #diffusion_models.show_images(generated, "Final Option 1 result")
 
 
-    print("Generating new images")
-    generated = diffusion_models.generate_new_images(
-            best_model,
-            option = 1,
-            n_samples=16,# change the number of samples as needed
-            device=device,
-            gif_name="test.gif"
-        )
+        print("Generating new images")
+        generated = diffusion_models.generate_new_images(
+                best_model,
+                option = 1,
+                n_samples=16,# change the number of samples as needed
+                device=device,
+                gif_name="test.gif"
+            )
