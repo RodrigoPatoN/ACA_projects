@@ -36,6 +36,7 @@ class Discriminator(nn.Module):
         self.model = nn.Sequential(
             nn.Conv2d(3 + num_classes, 64, 4, 2, 1, bias=False),  # Input now has extra channels
             nn.LeakyReLU(0.2, inplace=True),
+            nn.Dropout(0.3),
             nn.Conv2d(64, 128, 4, 2, 1, bias=False),
             nn.BatchNorm2d(128),
             nn.LeakyReLU(0.2, inplace=True),
@@ -46,6 +47,7 @@ class Discriminator(nn.Module):
             nn.Conv2d(256, 512, 4, 2, 1, bias=False),
             nn.BatchNorm2d(512),
             nn.LeakyReLU(0.2, inplace=True),
+            nn.Dropout(0.3),
             nn.Conv2d(512, 1, 2, 1, 0, bias=False),
             nn.Sigmoid()
         )
