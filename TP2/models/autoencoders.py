@@ -159,14 +159,13 @@ def train_dae(model, dataloader, random_seed, device='cpu', learning_rate=0.001,
     return model.cpu()
 
 
-def generate_images_vae(vae, num_images=16, latent_dim=128, random_seed=8, device='cpu'):
+def generate_images_vae(vae, num_images=16, latent_dim=128, device='cpu'):
 
     vae.eval()
     vae.to(device)
     
     with torch.no_grad():
-        g = torch.Generator(device=device).manual_seed(random_seed)
-        z = torch.randn((num_images, latent_dim), generator=g, device=device)
-        z = torch.randn(num_images, latent_dim, random_seed=random_seed).to(device)
+        z = torch.randn((num_images, latent_dim), device=device)
+        z = torch.randn(num_images, latent_dim).to(device)
         generated = vae.decode(z)
     return generated.cpu()

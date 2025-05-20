@@ -88,8 +88,8 @@ for seed_num, seed in enumerate(SEEDS):
         os.makedirs(f"generated_images/VAE/{seed_num}/001", exist_ok=True)
         os.makedirs(f"generated_images/VAE/{seed_num}/01", exist_ok=True)
 
-        generated_01 = autoencoders.generate_images_vae(vae_01, num_images=num_images, latent_dim=128, random_seed=seed)
-        generated_001 = autoencoders.generate_images_vae(vae_001, num_images=num_images, latent_dim=128, random_seed=seed)
+        generated_01 = autoencoders.generate_images_vae(vae_01, num_images=num_images, latent_dim=128)
+        generated_001 = autoencoders.generate_images_vae(vae_001, num_images=num_images, latent_dim=128)
 
         for i in range(len(generated_01)):
             save_image(generated_01[i], f"generated_images/VAE/{seed_num}/01/{i}.png")
