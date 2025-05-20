@@ -336,7 +336,7 @@ if run["Diffusion"]:
     no_train = False
     batch_size = 128
     n_epochs = 300
-    lr = 0.001
+    learning_rate = 0.001
 
     # Defining model
     n_steps, min_beta, max_beta = 1000, 10 ** -4, 0.02  # Originally used by the authors of the paper
@@ -347,4 +347,4 @@ if run["Diffusion"]:
     # Training
     store_path = f"./models/diff_model_{learning_rate}.pt"
     if not no_train:
-        diffusion_models.training_loop(ddpm, dataloader, n_epochs, optim=Adam(ddpm.parameters(), lr), device=device, store_path=store_path, learning_rate=lr)
+        diffusion_models.training_loop(ddpm, dataloader, n_epochs, optim=Adam(ddpm.parameters(), learning_rate), device=device, store_path=store_path, learning_rate=lr)
