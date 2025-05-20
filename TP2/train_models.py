@@ -305,10 +305,8 @@ if run["CGAN"]:
             lossG.backward()
             optimizerG.step()
 
-            # Optional: print log
-            if i % 40 == 0:
-                print(f"[{epoch}/{num_epochs}][{i}/{len(dataloader)}] Loss_D: {lossD.item():.4f} Loss_G: {lossG.item():.4f}")
 
+        print(f"[{epoch}/{num_epochs}][{i}/{len(dataloader)}] Loss_D: {lossD.item():.4f} Loss_G: {lossG.item():.4f}")
         losses.append(lossG.item())
         # Save generated samples at the end of each epoch
         with torch.no_grad():
