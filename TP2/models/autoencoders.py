@@ -163,7 +163,9 @@ class DenoisingAutoencoder(nn.Module):
     def __init__(self):
         super().__init__()
         self.encoder = nn.Sequential(
-            nn.Conv2d(3, 32, 3, stride=2, padding=1),
+            nn.Conv2d(3, 16, 3, stride=2, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(16, 32, 3, stride=2, padding=1),
             nn.ReLU(),
             nn.Conv2d(32, 64, 3, stride=2, padding=1),
             nn.ReLU()
@@ -171,7 +173,9 @@ class DenoisingAutoencoder(nn.Module):
         self.decoder = nn.Sequential(
             nn.ConvTranspose2d(64, 32, 3, stride=2, padding=1, output_padding=1),
             nn.ReLU(),
-            nn.ConvTranspose2d(32, 3, 3, stride=2, padding=1, output_padding=1),
+            nn.ConvTranspose2d(32, 16, 3, stride=2, padding=1, output_padding=1),
+            nn.ReLU(),
+            nn.ConvTranspose2d(16, 3, 3, stride=2, padding=1, output_padding=1),
             nn.Sigmoid()
         )
 
@@ -189,12 +193,13 @@ def train_dae(model, dataloader, device='cpu', learning_rate=0.01, epochs=300):
     losses = []
 
     for epoch in range(epochs):
+        print(epoch)
         model.train()
         total_loss = 0
         for x, _ in dataloader:
             x = x.to(device)
-            noise = x + 0.4 * torch.randn_like(x)
-            noise = torch.clamp(noise, 0., 1.)
+            noise = torch.randn_like(x)
+            #noise = torch.clamp(noise, 0., 1.)
             out = model(noise)
             loss = criterion(out, x)
             optimizer.zero_grad()

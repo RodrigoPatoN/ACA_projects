@@ -19,7 +19,7 @@ class Generator(nn.Module):
             nn.BatchNorm2d(64),
             nn.ReLU(True),
             nn.ConvTranspose2d(64, 3, 4, 2, 1, bias=False),
-            nn.Tanh()
+            nn.Sigmoid()
         )
 
     def forward(self, noise, labels):

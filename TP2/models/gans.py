@@ -17,7 +17,7 @@ class Generator(nn.Module):
             nn.BatchNorm2d(64),
             nn.ReLU(True),
             nn.ConvTranspose2d(64, 3, 4, 2, 1, bias=False),
-            nn.Tanh()  # Output is an image (CIFAR-10 size: 3x32x32)
+            nn.Sigmoid()  # Output is an image (CIFAR-10 size: 3x32x32)
         )
 
 
