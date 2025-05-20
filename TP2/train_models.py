@@ -152,7 +152,7 @@ while not chosen:
             learning_rate = 0.001
 
             vae = autoencoders.VAE(color_channels=3, latent_dim=128)
-            autoencoders.train_vae(vae, dataloader, seed, device=device, epochs=3, learning_rate=learning_rate)     
+            autoencoders.train_vae(vae, dataloader, seed, device=device, epochs=300, learning_rate=learning_rate)     
 
             torch.save(vae.state_dict(), f'trained_models/{seed}/vae_model_{learning_rate}.pth')
             print("VAE model saved.")
