@@ -276,7 +276,7 @@ class MyUNet(nn.Module):
             MyBlock((10, 32, 32), 10, 10, normalize=False)
         )
 
-        self.conv_out = nn.Conv2d(10, 1, 3, 1, 1)
+        self.conv_out = nn.Conv2d(10, 3, 3, 1, 1)
 
     def forward(self, x, t):
         # x is (N, 2, 28, 28) (image with positional embedding stacked on channel dimension)
