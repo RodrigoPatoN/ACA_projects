@@ -71,6 +71,8 @@ while not chosen:
 
 # -------------------------------- Load Dataset --------------------------------
 
+print("CHOSEN")
+
 import os
 import numpy as np
 import torch
@@ -266,6 +268,9 @@ for seed_num, seed in enumerate(SEEDS):
         from models import cgans
         from torchvision.utils import save_image
 
+        class_probs = np.array([1218, 3117, 1551, 2895, 1214, 1420, 3329, 2348], dtype=np.float32)
+        class_probs /= class_probs.sum()
+
         netG = cgans.Generator(num_classes=8).to(device)
         netD = cgans.Discriminator(num_classes=8).to(device)
 
@@ -307,7 +312,14 @@ for seed_num, seed in enumerate(SEEDS):
 
                     # Step 2: Train on fake images
                     noise = torch.randn(b_size, latent_dim, 1, 1, device=device)
-                    fake_class_labels = torch.randint(3, 5, (b_size,), device=device)
+
+                    fake_class_labels = torch.tensor(
+                        np.random.choice(8, size=b_size, p=class_probs),
+                        device=device
+                    )
+
+                    #fake_class_labels = torch.randint(0, 8, (b_size,), device=device)
+
                     fake_images = netG(noise, fake_class_labels)
                     output_fake = netD(fake_images.detach(), fake_class_labels)
                     fake_targets = torch.full((b_size,), fake_label, dtype=torch.float, device=device)
@@ -326,14 +338,13 @@ for seed_num, seed in enumerate(SEEDS):
 
                 # (Step 5) Sample new noise
                 noise = torch.randn(batch_size, latent_dim, 1, 1, device=device)
-                gen_labels = torch.randint(3, 5, (batch_size,), device=device)
+                gen_labels = torch.tensor(np.random.choice(8, size=b_size, p=class_probs), device=device)
                 fake_images = netG(noise, gen_labels)
                 output = netD(fake_images, gen_labels)
                 valid = torch.full((batch_size,), real_label, dtype=torch.float, device=device)
                 lossG = criterion(output, valid)
                 lossG.backward()
                 optimizerG.step()
-
 
             print(f"[{epoch}/{num_epochs}][{i}/{len(dataloader)}] Loss_D: {lossD.item():.4f} Loss_G: {lossG.item():.4f}")
             losses.append(lossG.item())
