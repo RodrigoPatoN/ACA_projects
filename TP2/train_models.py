@@ -338,7 +338,7 @@ for seed_num, seed in enumerate(SEEDS):
 
                 # (Step 5) Sample new noise
                 noise = torch.randn(batch_size, latent_dim, 1, 1, device=device)
-                gen_labels = torch.tensor(np.random.choice(8, size=b_size, p=class_probs), device=device)
+                gen_labels = torch.tensor(np.random.choice(8, size=batch_size, p=class_probs), device=device)
                 fake_images = netG(noise, gen_labels)
                 output = netD(fake_images, gen_labels)
                 valid = torch.full((batch_size,), real_label, dtype=torch.float, device=device)
