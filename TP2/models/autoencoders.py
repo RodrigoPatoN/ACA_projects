@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class VAE(nn.Module):
-    def __init__(self, color_channels=1, latent_dim=128):
+    def __init__(self, color_channels=3, latent_dim=128):
         super().__init__()
         self.encoder = nn.Sequential(
             nn.Conv2d(color_channels, 16, 3, stride=2, padding=1),  # (B,16,16,16)
@@ -60,7 +60,7 @@ def vae_loss_function(recon_x, x, mu, log_var):
     return recon_loss + kl_loss
 
 
-def train_vae(model, dataloader, learning_rate=0.001, device='cpu', epochs=300):
+def train_vae(model, dataloader, random_seed, learning_rate=0.001, device='cpu', epochs=300):
     model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -95,7 +95,7 @@ def train_vae(model, dataloader, learning_rate=0.001, device='cpu', epochs=300):
         losses.append(total_loss / len(dataloader.dataset))
 
     # save losses
-    with open(f"losses/{torch.seed}/vae_losses_{learning_rate}.txt", "w") as f:
+    with open(f"losses/{random_seed}/vae_losses_{learning_rate}.txt", "w") as f:
         for loss in losses:
             f.write(f"{loss}\n")
 
@@ -127,7 +127,7 @@ class DenoisingAutoencoder(nn.Module):
         return self.decoder(x)
 
 
-def train_dae(model, dataloader, device='cpu', learning_rate=0.01, epochs=300):
+def train_dae(model, dataloader, random_seed, device='cpu', learning_rate=0.001, epochs=300):
 
     model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -152,7 +152,7 @@ def train_dae(model, dataloader, device='cpu', learning_rate=0.01, epochs=300):
         print(f"Epoch [{epoch+1}/{epochs}] DAE Loss: {total_loss/len(dataloader):.4f}")
         losses.append(total_loss / len(dataloader))
     
-    with open(f"./losses/{torch.seed}/dae_losses_{learning_rate}.txt", "w") as f:
+    with open(f"./losses/{random_seed}/dae_losses_{learning_rate}.txt", "w") as f:
         for loss in losses:
             f.write(f"{loss}\n")
 

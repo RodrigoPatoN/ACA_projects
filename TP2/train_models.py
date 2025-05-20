@@ -149,20 +149,24 @@ while not chosen:
             
             from models import autoencoders
 
-            vae = autoencoders.VAE(color_channels=3, latent_dim=128)
-            autoencoders.train_vae(vae, dataloader, device=device, epochs=300)     
+            learning_rate = 0.001
 
-            torch.save(vae.state_dict(), f'trained_models/{seed}/vae_model_01.pth')
+            vae = autoencoders.VAE(color_channels=3, latent_dim=128)
+            autoencoders.train_vae(vae, dataloader, seed, device=device, epochs=3, learning_rate=learning_rate)     
+
+            torch.save(vae.state_dict(), f'trained_models/{seed}/vae_model_{learning_rate}.pth')
             print("VAE model saved.")
 
         if run["DAE"]:
             
             from models import autoencoders
 
-            dae = autoencoders.DenoisingAutoencoder()
-            dae = autoencoders.train_dae(dae, dataloader, device=device, epochs=300)
+            learning_rate = 0.001
 
-            torch.save(dae.state_dict(), f'trained_models/{seed}/dae_model_01.pth')
+            dae = autoencoders.DenoisingAutoencoder()
+            dae = autoencoders.train_dae(dae, dataloader, seed, device=device, epochs=300, learning_rate=learning_rate)
+
+            torch.save(dae.state_dict(), f'trained_models/{seed}/dae_model_{learning_rate}.pth')
             print("DAE model saved.")
 
         # -------------------------------- GAN --------------------------------
