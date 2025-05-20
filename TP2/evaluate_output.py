@@ -9,10 +9,12 @@ sample_template = "npz_dataset/sample_{}.npz"
 
 # Store FID results
 fid_scores = []
-
+learning_rate = "01"
 # Run FID for sample_1.npz to sample_5.npz
 
 for random_sample in os.listdir(reference_path):
+
+    generated_path = os.path.join(reference_path, random_sample, learning_rate)
 
     for i in range(1, 6):
 
@@ -20,7 +22,7 @@ for random_sample in os.listdir(reference_path):
         command = [
             "python", "-m", "pytorch_fid",
             "--device", device,
-            reference_path,
+            generated_path,
             sample_path
         ]
 
