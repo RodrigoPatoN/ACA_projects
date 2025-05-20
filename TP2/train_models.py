@@ -57,7 +57,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # set random seed for reproducibility
-SEEDS = [44, 123, 2024, 7, 888]
+SEEDS = [42, 123, 2024, 7, 888]
 
 run = {
     "VAE": True,
@@ -138,6 +138,10 @@ while not chosen:
 
         os.makedirs(f'trained_models/', exist_ok=True)
         os.makedirs(f'trained_models/{seed}/', exist_ok=True)
+        os.makedirs(f'output_training/', exist_ok=True)
+        os.makedirs(f'output_training/{seed}/', exist_ok=True)
+        os.makedirs(f"losses/", exist_ok=True)
+        os.makedirs(f"losses/{seed}/", exist_ok=True)
 
         print(f"Using seed {seed} for random sampling.")
 
@@ -146,7 +150,7 @@ while not chosen:
             from models import autoencoders
 
             vae = autoencoders.VAE(color_channels=3, latent_dim=128)
-            autoencoders.train_vae(vae, dataloader, device=device, epochs=200)     
+            autoencoders.train_vae(vae, dataloader, device=device, epochs=300)     
 
             torch.save(vae.state_dict(), f'trained_models/{seed}/vae_model_01.pth')
             print("VAE model saved.")
@@ -156,7 +160,7 @@ while not chosen:
             from models import autoencoders
 
             dae = autoencoders.DenoisingAutoencoder()
-            dae = autoencoders.train_dae(dae, dataloader, device=device, epochs=200)
+            dae = autoencoders.train_dae(dae, dataloader, device=device, epochs=300)
 
             torch.save(dae.state_dict(), f'trained_models/{seed}/dae_model_01.pth')
             print("DAE model saved.")
@@ -244,8 +248,11 @@ while not chosen:
                 with torch.no_grad():
                     fixed_noise = torch.randn(5, latent_dim, 1, 1, device=device)
                     fake = netG(fixed_noise).detach().cpu()
-                    os.makedirs('output_training', exist_ok=True)
-                    save_image(fake, f'output_training/fake_samples_epoch_{epoch:03d}.png', normalize=True)
+
+                    os.makedirs(f'output_training/{seed}/DCGAN/', exist_ok=True)
+                    os.makedirs(f'output_training/{seed}/DCGAN/{learning_rate}/', exist_ok=True)
+
+                    save_image(fake, f'output_training/{seed}/DCGAN/{learning_rate}/fake_samples_epoch_{epoch:03d}.png', normalize=True)
 
             # save losses
             with open(f'losses_GAN_{learning_rate}.txt', 'w') as f:
@@ -338,8 +345,11 @@ while not chosen:
                     fixed_noise = torch.randn(5, latent_dim, 1, 1, device=device)
                     fixed_labels = torch.randint(3, 5, (5,), device=device)
                     fake = netG(fixed_noise, fixed_labels).detach().cpu()
-                    os.makedirs('output_training', exist_ok=True)
-                    save_image(fake, f'output_training/fake_samples_epoch_{epoch:03d}.png', normalize=True)
+
+                    os.makedirs(f'output_training/{seed}/CGAN/', exist_ok=True)
+                    os.makedirs(f'output_training/{seed}/CGAN/{learning_rate}/', exist_ok=True)
+
+                    save_image(fake, f'output_training/{seed}/CGAN/{learning_rate}/fake_samples_epoch_{epoch:03d}.png', normalize=True)
 
             print("Training complete.")
 
