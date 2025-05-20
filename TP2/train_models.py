@@ -347,4 +347,10 @@ if run["Diffusion"]:
     # Training
     store_path = f"./models/diff_model_{learning_rate}.pt"
     if not no_train:
-        diffusion_models.training_loop(ddpm, dataloader, n_epochs, optim=Adam(ddpm.parameters(), learning_rate), device=device, store_path=store_path, learning_rate=lr)
+        diffusion_models.training_loop(ddpm,
+                                       dataloader, 
+                                       n_epochs, 
+                                       optim=Adam(ddpm.parameters(), learning_rate), 
+                                       device=device, 
+                                       store_path=store_path, 
+                                       learning_rate=learning_rate)
