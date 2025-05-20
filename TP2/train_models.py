@@ -323,8 +323,8 @@ if run["CGAN"]:
         for loss in losses:
             f.write(f"{loss}\n")
 
-    torch.save(netG.state_dict(), './models/CGAN_netG.pth')
-    torch.save(netD.state_dict(), './models/CGAN_netD.pth')
+    torch.save(netG.state_dict(), f'./models/CGAN_netG_{learning_rate}.pth')
+    torch.save(netD.state_dict(), f'./models/CGAN_netD_{learning_rate}.pth')
 
 # -------------------------------- Diffusion --------------------------------
 
@@ -335,7 +335,7 @@ if run["Diffusion"]:
 
     no_train = False
     batch_size = 128
-    n_epochs = 100
+    n_epochs = 300
     lr = 0.001
 
     # Defining model
@@ -345,6 +345,6 @@ if run["Diffusion"]:
     print(sum([p.numel() for p in ddpm.parameters()]))
 
     # Training
-    store_path = "./models/diff_model.pt"
+    store_path = f"./models/diff_model_{learning_rate}.pt"
     if not no_train:
         diffusion_models.training_loop(ddpm, dataloader, n_epochs, optim=Adam(ddpm.parameters(), lr), device=device, store_path=store_path, learning_rate=lr)
