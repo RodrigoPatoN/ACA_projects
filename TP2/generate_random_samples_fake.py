@@ -78,10 +78,10 @@ for seed_num, seed in enumerate(SEEDS):
         from models import autoencoders 
 
         vae_01 = autoencoders.VAE(color_channels=3, latent_dim=128)
-        vae_01.load_state_dict(torch.load(f"trained_models/{seed}/vae_models_01.pth"))
+        vae_01.load_state_dict(torch.load(f"trained_models/{seed}/vae_models_0.01.pth"))
 
         vae_001 = autoencoders.VAE(color_channels=3, latent_dim=128)
-        vae_001.load_state_dict(torch.load(f"trained_models/{seed}/vae_models_001.pth"))
+        vae_001.load_state_dict(torch.load(f"trained_models/{seed}/vae_models_0.001.pth"))
 
         os.makedirs("generated_images/VAE", exist_ok=True)
         os.makedirs(f"generated_images/VAE/{seed_num}", exist_ok=True)
