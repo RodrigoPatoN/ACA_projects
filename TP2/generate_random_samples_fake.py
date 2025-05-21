@@ -208,7 +208,7 @@ for seed_num, seed in enumerate(SEEDS):
         
         generated_001 = diffusion_models.generate_new_images(
                 best_model_001,
-                option = 2,
+                option = 1,
                 n_samples=36,# change the number of samples as needed
                 device=device,
                 gif_name="test.gif"
