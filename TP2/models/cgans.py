@@ -7,6 +7,7 @@ class Generator(nn.Module):
     def __init__(self, latent_dim=100, num_classes=10):
         super(Generator, self).__init__()
         self.label_emb = nn.Embedding(num_classes, num_classes)
+        #self.label_emb = nn.Embedding(num_classes, latent_dim)
 
         self.main = nn.Sequential(
             nn.ConvTranspose2d(latent_dim + num_classes, 256, 4, 1, 0, bias=False),
@@ -34,9 +35,8 @@ class Discriminator(nn.Module):
         self.label_emb = nn.Embedding(num_classes, num_classes)
 
         self.model = nn.Sequential(
-            nn.Conv2d(3 + num_classes, 64, 4, 2, 1, bias=False),  # Input now has extra channels
+            nn.Conv2d(3 + num_classes, 64, 4, 2, 1, bias=False),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Dropout(0.3),
             nn.Conv2d(64, 128, 4, 2, 1, bias=False),
             nn.BatchNorm2d(128),
             nn.LeakyReLU(0.2, inplace=True),
@@ -47,7 +47,6 @@ class Discriminator(nn.Module):
             nn.Conv2d(256, 512, 4, 2, 1, bias=False),
             nn.BatchNorm2d(512),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Dropout(0.3),
             nn.Conv2d(512, 1, 2, 1, 0, bias=False),
             nn.Sigmoid()
         )
