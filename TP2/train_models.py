@@ -13,7 +13,7 @@ chosen = False
 
 while not chosen:
 
-    print("SELECT MODEL TO TRAIN:\n\n1.VAE\n2.DAE\n3.GAN\n4.CGAN\n5.Diffusion\n6.ALL\n")
+    print("SELECT MODEL TO TRAIN:\n\n1.VAE\n2.DAE\n3.GAN\n4.CGAN\n5.Diffusion\n")
     model_choice = input("Enter your choice (1/2/3/4/5): ")
     chosen = True
     #model_choice = "4"
@@ -105,10 +105,22 @@ DataClass = getattr(medmnist, info['python_class'])
 #    transforms.ToTensor(),
 #])
 
-data_transform = transforms.Compose([
-    transforms.Resize((32, 32)),
-    transforms.ToTensor(),
-])
+# normalize the images to [-1, 1] for diffusion models and [0, 1] for GANs and VAEs
+
+if model_choice == "5":
+
+    data_transform = transforms.Compose([
+        transforms.Resize((32, 32)),
+        transforms.ToTensor(),
+        transforms.Lambda(lambda x: (x - 0.5) * 2)
+    ])
+
+else:
+    
+    data_transform = transforms.Compose([
+        transforms.Resize((32, 32)),
+        transforms.ToTensor(),
+    ])
 
 # Load all splits
 train = DataClass(split='train', transform=data_transform, download=True)
