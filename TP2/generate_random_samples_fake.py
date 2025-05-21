@@ -219,12 +219,18 @@ for seed_num, seed in enumerate(SEEDS):
         os.makedirs(f"generated_images/Diffusion/{seed_num}/001", exist_ok=True)
         os.makedirs(f"generated_images/Diffusion/{seed_num}/01", exist_ok=True)    
 
+        print(generated_001.shape)
+
         for i in range(generated_001.shape[0]):
             img = generated_001[i]
-            img = torch.clamp(img, -3, 3)  # You can adjust this range depending on your data
-            img = (img + 3) / 6  # Now in [0, 1] range
-            save_image(img, f"sample_{i}.png")
+            print(f"Sample {i}: R mean={img[0].mean():.3f}, G mean={img[1].mean():.3f}, B mean={img[2].mean():.3f}")
+            img = torch.clamp(img, -2.5, 2.5)  # You can adjust this range depending on your data
+            min_val = img.min()
+            max_val = img.max()
+            img = (img - min_val) / (max_val - min_val + 1e-8)
+            save_image(img, f"generated_images/Diffusion/{seed_num}/001/{i}.png")
+            
 
-        for i in range(len(generated_001)):
+        #for i in range(len(generated_001)):
             #save_image(generated_01[i], f"generated_images/Diffusion/{seed_num}/01/{i}.png")
-            save_image(generated_001[i], f"generated_images/Diffusion/{seed_num}/001/{i}.png")
+            #save_image(generated_001[i], f"generated_images/Diffusion/{seed_num}/001/{i}.png")
