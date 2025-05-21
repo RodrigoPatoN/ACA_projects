@@ -180,7 +180,6 @@ for seed_num, seed in enumerate(SEEDS):
         os.makedirs(f"generated_images/CGAN/{seed_num}/001", exist_ok=True)
         os.makedirs(f"generated_images/CGAN/{seed_num}/01", exist_ok=True)
 
-        # Save generated images
         for i in range(len(images_01)):
             save_image(images_01[i], f"generated_images/CGAN/{seed_num}/01/{i}.png")
             save_image(images_001[i], f"generated_images/CGAN/{seed_num}/001/{i}.png")
@@ -201,7 +200,7 @@ for seed_num, seed in enumerate(SEEDS):
 
         generated_01 = diffusion_models.generate_new_images(
                 best_model_01,
-                option = 1,
+                option = 2,
                 n_samples=16,# change the number of samples as needed
                 device=device,
                 gif_name="test.gif"
@@ -209,10 +208,17 @@ for seed_num, seed in enumerate(SEEDS):
         
         generated_001 = diffusion_models.generate_new_images(
                 best_model_001,
-                option = 1,
+                option = 2,
                 n_samples=16,# change the number of samples as needed
                 device=device,
                 gif_name="test.gif"
             )
-        
-        #diffusion_models.show_images(generated, "Final Option 1 result")
+
+        os.makedirs("generated_images/Diffusion", exist_ok=True)
+        os.makedirs(f"generated_images/Diffusion/{seed_num}", exist_ok=True)
+        os.makedirs(f"generated_images/Diffusion/{seed_num}/001", exist_ok=True)
+        os.makedirs(f"generated_images/Diffusion/{seed_num}/01", exist_ok=True)    
+
+        for i in range(len(generated_01)):
+            save_image(generated_01[i], f"generated_images/Diffusion/{seed_num}/01/{i}.png")
+            save_image(generated_001[i], f"generated_images/Diffusion/{seed_num}/001/{i}.png")
