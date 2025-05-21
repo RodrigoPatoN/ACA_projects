@@ -215,9 +215,9 @@ for seed_num, seed in enumerate(SEEDS):
             )
 
         os.makedirs("generated_images/Diffusion", exist_ok=True)
-        os.makedirs(f"generated_images/Diffusion/{seed_num}", exist_ok=True)
-        os.makedirs(f"generated_images/Diffusion/{seed_num}/001", exist_ok=True)
-        os.makedirs(f"generated_images/Diffusion/{seed_num}/01", exist_ok=True)    
+        os.makedirs(f"generated_images/Diffusion/{seed}", exist_ok=True)
+        os.makedirs(f"generated_images/Diffusion/{seed}/001", exist_ok=True)
+        os.makedirs(f"generated_images/Diffusion/{seed}/01", exist_ok=True)    
 
         print(generated_001.shape)
 
@@ -228,7 +228,7 @@ for seed_num, seed in enumerate(SEEDS):
             min_val = img.min()
             max_val = img.max()
             img = (img - min_val) / (max_val - min_val + 1e-8)
-            save_image(img, f"generated_images/Diffusion/{seed_num}/001/{i}.png")
+            save_image(img, f"generated_images/Diffusion/{seed}/001/{i}.png")
             
 
         #for i in range(len(generated_001)):
