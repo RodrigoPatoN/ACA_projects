@@ -208,7 +208,7 @@ for seed_num, seed in enumerate(SEEDS):
         
         generated_001 = diffusion_models.generate_new_images(
                 best_model_001,
-                option = 1,
+                option = 2,
                 n_samples=36,# change the number of samples as needed
                 device=device,
                 gif_name="test.gif"
@@ -224,7 +224,6 @@ for seed_num, seed in enumerate(SEEDS):
         for i in range(generated_001.shape[0]):
             img = generated_001[i]
             print(f"Sample {i}: R mean={img[0].mean():.3f}, G mean={img[1].mean():.3f}, B mean={img[2].mean():.3f}")
-            img = torch.clamp(img, -2.5, 2.5)  # You can adjust this range depending on your data
             min_val = img.min()
             max_val = img.max()
             img = (img - min_val) / (max_val - min_val + 1e-8)
