@@ -219,6 +219,12 @@ for seed_num, seed in enumerate(SEEDS):
         os.makedirs(f"generated_images/Diffusion/{seed_num}/001", exist_ok=True)
         os.makedirs(f"generated_images/Diffusion/{seed_num}/01", exist_ok=True)    
 
+        for i in range(generated_001.shape[0]):
+            img = generated_001[i]
+            img = torch.clamp(img, -3, 3)  # You can adjust this range depending on your data
+            img = (img + 3) / 6  # Now in [0, 1] range
+            save_image(img, f"sample_{i}.png")
+
         for i in range(len(generated_001)):
             #save_image(generated_01[i], f"generated_images/Diffusion/{seed_num}/01/{i}.png")
             save_image(generated_001[i], f"generated_images/Diffusion/{seed_num}/001/{i}.png")
