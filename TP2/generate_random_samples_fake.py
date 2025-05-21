@@ -164,13 +164,26 @@ for seed_num, seed in enumerate(SEEDS):
 
         from models import cgans
 
-        images = cgans.generate_images(num_images=num_images, latent_dim=128)
+        generator_01 = cgans.Generator()
+        generator_01.load_state_dict(torch.load(f"trained_models/{seed}/CGAN_netG_0.01.pth", map_location=device))
+        generator_01.to(device)
+
+        generator_001 = cgans.Generator()
+        generator_001.load_state_dict(torch.load(f"trained_models/{seed}/CGAN_netG_0.001.pth", map_location=device))
+        generator_001.to(device)
+
+        images_01 = gans.generate_images(generator_01, num_images=num_images, device=device)
+        images_001 = gans.generate_images(generator_001, num_images=num_images, device=device)
+
+        os.makedirs("generated_images/CGAN", exist_ok=True)
+        os.makedirs(f"generated_images/CGAN/{seed_num}", exist_ok=True)
+        os.makedirs(f"generated_images/CGAN/{seed_num}/001", exist_ok=True)
+        os.makedirs(f"generated_images/CGAN/{seed_num}/01", exist_ok=True)
 
         # Save generated images
-        for i in range(len(images)):
-            os.makedirs("generated_images", exist_ok=True)
-            os.makedirs("generated_images/CGAN", exist_ok=True)
-            save_image(images[i], f"generated_images/CGAN/{i}.png")
+        for i in range(len(images_01)):
+            save_image(images_01[i], f"generated_images/CGAN/{seed_num}/01/{i}.png")
+            save_image(images_001[i], f"generated_images/CGAN/{seed_num}/001/{i}.png")
 
         print("Generated CGAN images saved to 'generated_images/' directory.")
 
