@@ -4,18 +4,18 @@ import os
 
 # Settings
 device = "cuda:1"
-reference_path = "./generated_images/AE/VAE/"
+reference_path = "./generated_images/VAE/"
 sample_template = "npz_dataset/sample_{}.npz"
 
 # Store FID results
 fid_scores = []
-learning_rate = "01"
+learning_rate = "001"
 # Run FID for sample_1.npz to sample_5.npz
 
 for random_sample in os.listdir(reference_path):
 
     generated_path = os.path.join(reference_path, random_sample, learning_rate)
-
+    print(generated_path)
     for i in range(1, 6):
 
         sample_path = sample_template.format(i)
