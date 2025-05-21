@@ -164,11 +164,11 @@ for seed_num, seed in enumerate(SEEDS):
 
         from models import cgans
 
-        generator_01 = cgans.Generator()
+        generator_01 = cgans.Generator(num_classes=8)
         generator_01.load_state_dict(torch.load(f"trained_models/{seed}/CGAN_netG_0.01.pth", map_location=device))
         generator_01.to(device)
 
-        generator_001 = cgans.Generator()
+        generator_001 = cgans.Generator(num_classes=8)
         generator_001.load_state_dict(torch.load(f"trained_models/{seed}/CGAN_netG_0.001.pth", map_location=device))
         generator_001.to(device)
 
