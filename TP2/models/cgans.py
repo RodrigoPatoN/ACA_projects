@@ -65,8 +65,15 @@ class Discriminator(nn.Module):
         return self.model(input).view(-1, 1).squeeze(1)
 
 def generate_images(generator, num_images, device):
-    with torch.no_grad():  # Temporarily set all the requires_grad flag to false
-        noise = torch.randn(num_images, 100, 1, 1, device=device)  # 100 is the size of the noise vector
-        generated_images = generator(noise)
+    with torch.no_grad():
+
+        noise = torch.randn(num_images, 100, 1, 1, device=device)
+
+        class_probs = np.array([1218, 3117, 1551, 2895, 1214, 1420, 3329, 2348], dtype=np.float32)
+        class_probs /= class_probs.sum()
+
+        labels = torch.tensor(np.random.choice(8, size=num_images, p=class_probs), device=device)
+
+        generated_images = generator(noise, labels)
         generated_images = (generated_images + 1) / 2  # Rescale images from [-1, 1] to [0, 1]
         return generated_images
