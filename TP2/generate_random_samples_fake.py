@@ -172,8 +172,8 @@ for seed_num, seed in enumerate(SEEDS):
         generator_001.load_state_dict(torch.load(f"trained_models/{seed}/CGAN_netG_0.001.pth", map_location=device))
         generator_001.to(device)
 
-        images_01 = gans.generate_images(generator_01, num_images=num_images, device=device)
-        images_001 = gans.generate_images(generator_001, num_images=num_images, device=device)
+        images_01 = cgans.generate_images(generator_01, num_images=num_images, device=device)
+        images_001 = cgans.generate_images(generator_001, num_images=num_images, device=device)
 
         os.makedirs("generated_images/CGAN", exist_ok=True)
         os.makedirs(f"generated_images/CGAN/{seed_num}", exist_ok=True)
