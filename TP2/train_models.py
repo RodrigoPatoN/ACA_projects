@@ -1,8 +1,8 @@
 run = {
-    "VAE": True,
-    "DAE": True,
+    "VAE": False,
+    "DAE": False,
     "GAN": False,
-    "CGAN": False,
+    "CGAN": True,
     "Diffusion": False,
 }
 
@@ -16,6 +16,7 @@ while not chosen:
     print("SELECT MODEL TO TRAIN:\n\n1.VAE\n2.DAE\n3.GAN\n4.CGAN\n5.Diffusion\n6.ALL\n")
     model_choice = input("Enter your choice (1/2/3/4/5): ")
     chosen = True
+    #model_choice = "4"
 
     if model_choice == "1":
 
@@ -124,8 +125,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # set random seed for reproducibility
-SEEDS = [42, 123, 2024, 7, 888]
-
+#SEEDS = [42, 123, 2024, 7, 888]
+SEEDS = [2024, 7, 88]
 for seed_num, seed in enumerate(SEEDS):
 
     torch.manual_seed(seed)
@@ -274,7 +275,7 @@ for seed_num, seed in enumerate(SEEDS):
         netG = cgans.Generator(num_classes=8).to(device)
         netD = cgans.Discriminator(num_classes=8).to(device)
 
-        learning_rate = 0.001
+        learning_rate = 0.01
 
         optimizerD = optim.Adam(netD.parameters(), lr=learning_rate, betas=(0.5, 0.999))
         optimizerG = optim.Adam(netG.parameters(), lr=learning_rate, betas=(0.5, 0.999))
@@ -379,7 +380,7 @@ for seed_num, seed in enumerate(SEEDS):
         no_train = False
         batch_size = 128
         n_epochs = 300
-        learning_rate = 0.001
+        learning_rate = 0.01
 
         # Defining model
         n_steps, min_beta, max_beta = 1000, 10 ** -4, 0.02  # Originally used by the authors of the paper

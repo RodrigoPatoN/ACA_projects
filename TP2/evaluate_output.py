@@ -4,7 +4,7 @@ import os
 
 # Settings
 device = "cuda:1"
-reference_path = "./generated_images/VAE/"
+reference_path = "./generated_images/CGAN/"
 sample_template = "npz_dataset/sample_{}.npz"
 
 # Store FID results
