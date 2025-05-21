@@ -137,8 +137,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # set random seed for reproducibility
-#SEEDS = [42, 123, 2024, 7, 888]
-SEEDS = [2024, 7, 88]
+SEEDS = [42, 123, 2024, 7, 888]
+
 for seed_num, seed in enumerate(SEEDS):
 
     torch.manual_seed(seed)

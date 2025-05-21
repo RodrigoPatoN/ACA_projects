@@ -201,7 +201,7 @@ for seed_num, seed in enumerate(SEEDS):
         generated_01 = diffusion_models.generate_new_images(
                 best_model_01,
                 option = 2,
-                n_samples=4,# change the number of samples as needed
+                n_samples=10000,# change the number of samples as needed
                 device=device,
                 gif_name="test.gif"
             )
@@ -209,7 +209,7 @@ for seed_num, seed in enumerate(SEEDS):
         generated_001 = diffusion_models.generate_new_images(
                 best_model_001,
                 option = 2,
-                n_samples=36,# change the number of samples as needed
+                n_samples=10000,# change the number of samples as needed
                 device=device,
                 gif_name="test.gif"
             )
@@ -219,17 +219,17 @@ for seed_num, seed in enumerate(SEEDS):
         os.makedirs(f"generated_images/Diffusion/{seed}/001", exist_ok=True)
         os.makedirs(f"generated_images/Diffusion/{seed}/01", exist_ok=True)    
 
-        print(generated_001.shape)
-
         for i in range(generated_001.shape[0]):
             img = generated_001[i]
-            print(f"Sample {i}: R mean={img[0].mean():.3f}, G mean={img[1].mean():.3f}, B mean={img[2].mean():.3f}")
             min_val = img.min()
             max_val = img.max()
             img = (img - min_val) / (max_val - min_val + 1e-8)
             save_image(img, f"generated_images/Diffusion/{seed}/001/{i}.png")
             
 
-        #for i in range(len(generated_001)):
-            #save_image(generated_01[i], f"generated_images/Diffusion/{seed_num}/01/{i}.png")
-            #save_image(generated_001[i], f"generated_images/Diffusion/{seed_num}/001/{i}.png")
+        for i in range(generated_01.shape[0]):
+            img = generated_01[i]
+            min_val = img.min()
+            max_val = img.max()
+            img = (img - min_val) / (max_val - min_val + 1e-8)
+            save_image(img, f"generated_images/Diffusion/{seed}/01/{i}.png")
