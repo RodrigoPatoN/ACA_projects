@@ -392,7 +392,7 @@ for seed_num, seed in enumerate(SEEDS):
         no_train = False
         batch_size = 128
         n_epochs = 300
-        learning_rate = 0.01
+        learning_rate = 0.001
 
         # Defining model
         n_steps, min_beta, max_beta = 1000, 10 ** -4, 0.02  # Originally used by the authors of the paper
