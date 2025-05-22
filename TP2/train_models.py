@@ -209,32 +209,33 @@ for seed_num, seed in enumerate(SEEDS):
 
         for epoch in range(num_epochs):
             for i, (data, _) in enumerate(dataloader):
+                
+                if epoch % 3 == 0:
+                    for _ in range(k):
+                        
+                        # Step 1: Train on real images
+                        netD.zero_grad()
+                        
+                        real_images = data.to(device)
+                        b_size = real_images.size(0)
+                        real_labels = torch.full((b_size,), real_label, dtype=torch.float, device=device)
 
-                for _ in range(k):
-                    
-                    # Step 1: Train on real images
-                    netD.zero_grad()
-                    
-                    real_images = data.to(device)
-                    b_size = real_images.size(0)
-                    real_labels = torch.full((b_size,), real_label, dtype=torch.float, device=device)
+                        output_real = netD(real_images)
+                        loss_real = criterion(output_real, real_labels)
+                        loss_real.backward()
 
-                    output_real = netD(real_images)
-                    loss_real = criterion(output_real, real_labels)
-                    loss_real.backward()
+                        # Step 2: Train on fake images
+                        noise = torch.randn(b_size, latent_dim, 1, 1, device=device)
+                        fake_images = netG(noise).detach()
+                        fake_labels = torch.full((b_size,), fake_label, dtype=torch.float, device=device)
 
-                    # Step 2: Train on fake images
-                    noise = torch.randn(b_size, latent_dim, 1, 1, device=device)
-                    fake_images = netG(noise).detach()
-                    fake_labels = torch.full((b_size,), fake_label, dtype=torch.float, device=device)
+                        output_fake = netD(fake_images)
+                        loss_fake = criterion(output_fake, fake_labels)
+                        loss_fake.backward()
 
-                    output_fake = netD(fake_images)
-                    loss_fake = criterion(output_fake, fake_labels)
-                    loss_fake.backward()
-
-                    # Step 3: Update Discriminator
-                    lossD = loss_real + loss_fake
-                    optimizerD.step()
+                        # Step 3: Update Discriminator
+                        lossD = loss_real + loss_fake
+                        optimizerD.step()
 
                 ########################
                 # 2. Train Generator
@@ -255,16 +256,6 @@ for seed_num, seed in enumerate(SEEDS):
 
             print(f"[{epoch}/{num_epochs}][{i}/{len(dataloader)}] Loss_D: {lossD.item():.4f} Loss_G: {lossG.item():.4f}")
             losses.append(lossG.item())
-
-            # Save generated samples at the end of each epoch
-            with torch.no_grad():
-                fixed_noise = torch.randn(5, latent_dim, 1, 1, device=device)
-                fake = netG(fixed_noise).detach().cpu()
-
-                os.makedirs(f'output_training/{seed}/DCGAN/', exist_ok=True)
-                os.makedirs(f'output_training/{seed}/DCGAN/{learning_rate}/', exist_ok=True)
-
-                save_image(fake, f'output_training/{seed}/DCGAN/{learning_rate}/fake_samples_epoch_{epoch:03d}.png', normalize=True)
 
         # save losses
         with open(f'losses_GAN_{learning_rate}.txt', 'w') as f:
@@ -361,16 +352,6 @@ for seed_num, seed in enumerate(SEEDS):
 
             print(f"[{epoch}/{num_epochs}][{i}/{len(dataloader)}] Loss_D: {lossD.item():.4f} Loss_G: {lossG.item():.4f}")
             losses.append(lossG.item())
-            # Save generated samples at the end of each epoch
-            with torch.no_grad():
-                fixed_noise = torch.randn(5, latent_dim, 1, 1, device=device)
-                fixed_labels = torch.randint(3, 5, (5,), device=device)
-                fake = netG(fixed_noise, fixed_labels).detach().cpu()
-
-                os.makedirs(f'output_training/{seed}/CGAN/', exist_ok=True)
-                os.makedirs(f'output_training/{seed}/CGAN/{learning_rate}/', exist_ok=True)
-
-                save_image(fake, f'output_training/{seed}/CGAN/{learning_rate}/fake_samples_epoch_{epoch:03d}.png', normalize=True)
 
         print("Training complete.")
 

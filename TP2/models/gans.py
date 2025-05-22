@@ -17,7 +17,7 @@ class Generator(nn.Module):
             nn.BatchNorm2d(64),
             nn.ReLU(True),
             nn.ConvTranspose2d(64, 3, 4, 2, 1, bias=False),
-            nn.Sigmoid()  # Output is an image (CIFAR-10 size: 3x32x32)
+            nn.Sigmoid()
         )
 
 
@@ -53,5 +53,5 @@ def generate_images(generator, num_images, device):
     with torch.no_grad():  # Temporarily set all the requires_grad flag to false
         noise = torch.randn(num_images, 100, 1, 1, device=device)  # 100 is the size of the noise vector
         generated_images = generator(noise)
-        generated_images = (generated_images + 1) / 2  # Rescale images from [-1, 1] to [0, 1]
+        #generated_images = (generated_images + 1) / 2  # Rescale images from [-1, 1] to [0, 1]
         return generated_images
