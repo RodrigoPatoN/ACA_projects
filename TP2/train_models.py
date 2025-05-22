@@ -210,7 +210,7 @@ for seed_num, seed in enumerate(SEEDS):
         for epoch in range(num_epochs):
             for i, (data, _) in enumerate(dataloader):
                 
-                if epoch % 2 == 0:
+                if epoch % 2 == 0 or epoch < 150:
                     for _ in range(k):
                         
                         # Step 1: Train on real images
@@ -297,9 +297,10 @@ for seed_num, seed in enumerate(SEEDS):
 
         losses = []
         lossD = 1
+        
         for epoch in range(num_epochs):
             for i, (data, label) in enumerate(dataloader):
-                if lossD > 0.1:
+                if epoch < 150 or (epoch > 150 and epoch % 2 == 0 and lossD < 0.1):
                     for _ in range(k):
                     
                         # Step 1: Train on real images

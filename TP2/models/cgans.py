@@ -14,6 +14,11 @@ class Generator(nn.Module):
             nn.ConvTranspose2d(latent_dim + n_dim_class, 256, 4, 1, 0, bias=False),
             nn.BatchNorm2d(256),
             nn.ReLU(True),
+            # new layer - improvement
+            nn.Conv2d(256, 256, 3, 1, 1, bias=False),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True),
+            ###
             nn.ConvTranspose2d(256, 128, 4, 2, 1, bias=False),
             nn.BatchNorm2d(128),
             nn.ReLU(True),
@@ -45,11 +50,16 @@ class Discriminator(nn.Module):
             nn.Conv2d(128, 256, 4, 2, 1, bias=False),
             nn.BatchNorm2d(256),
             nn.LeakyReLU(0.2, inplace=True),
-            #nn.Dropout(0.3),
             nn.Conv2d(256, 512, 4, 2, 1, bias=False),
             nn.BatchNorm2d(512),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(512, 1, 2, 1, 0, bias=False),
+            # new layers - improvement
+            nn.Dropout(0.3),
+            nn.Conv2d(512, 1024, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(0.2, inplace=True),
+            # the layer below changed from 512 to 1024
+            nn.Conv2d(1024, 1, 2, 1, 0, bias=False),
             nn.Sigmoid()
         )
 
