@@ -210,7 +210,7 @@ for seed_num, seed in enumerate(SEEDS):
         for epoch in range(num_epochs):
             for i, (data, _) in enumerate(dataloader):
                 
-                if epoch % 3 == 0:
+                if epoch % 2 == 0:
                     for _ in range(k):
                         
                         # Step 1: Train on real images
@@ -264,8 +264,8 @@ for seed_num, seed in enumerate(SEEDS):
 
         print("Training complete.")
 
-        torch.save(netG.state_dict(), f'./trained_models/{seed}/GAN_netG_{learning_rate}.pth')
-        torch.save(netD.state_dict(), f'./trained_models/{seed}/GAN_netD_{learning_rate}.pth')
+        torch.save(netG.state_dict(), f'./trained_models/{seed}/improved_GAN_netG_{learning_rate}.pth')
+        torch.save(netD.state_dict(), f'./trained_models/{seed}/improved_GAN_netD_{learning_rate}.pth')
 
     if run["CGAN"]:
 
@@ -278,7 +278,7 @@ for seed_num, seed in enumerate(SEEDS):
         netG = cgans.Generator(num_classes=8).to(device)
         netD = cgans.Discriminator(num_classes=8).to(device)
 
-        learning_rate = 0.01
+        learning_rate = 0.001
 
         optimizerD = optim.Adam(netD.parameters(), lr=learning_rate, betas=(0.5, 0.999))
         optimizerG = optim.Adam(netG.parameters(), lr=learning_rate, betas=(0.5, 0.999))
