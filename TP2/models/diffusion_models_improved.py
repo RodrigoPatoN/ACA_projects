@@ -290,7 +290,7 @@ class MyUNet(nn.Module):
         )
     
 
-def training_loop(ddpm, loader, n_epochs, optim, device, display=False, store_path="ddpm_model.pt", learning_rate=0.01):
+def training_loop(ddpm, loader, n_epochs, optim, device, display=False, store_path="ddpm_model.pt", learning_rate=0.001):
 
     mse = nn.MSELoss()
     best_loss = float("inf")
