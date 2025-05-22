@@ -74,5 +74,5 @@ def generate_images(generator, num_images, device):
         labels = torch.tensor(np.random.choice(8, size=num_images, p=class_probs), device=device)
 
         generated_images = generator(noise, labels)
-        generated_images = (generated_images + 1) / 2  # Rescale images from [-1, 1] to [0, 1]
+        #generated_images = (generated_images + 1) / 2  # Rescale images from [-1, 1] to [0, 1]
         return generated_images
