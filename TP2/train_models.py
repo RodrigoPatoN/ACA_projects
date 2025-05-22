@@ -197,7 +197,7 @@ for seed_num, seed in enumerate(SEEDS):
 
         latent_dim = 100
         batch_size = 128
-        num_epochs = 300
+        num_epochs = 500
         k = 1
 
         real_label = 1
@@ -210,7 +210,7 @@ for seed_num, seed in enumerate(SEEDS):
         for epoch in range(num_epochs):
             for i, (data, _) in enumerate(dataloader):
                 
-                if epoch % 3 == 0:
+                if epoch % 2 == 0:
                     for _ in range(k):
                         
                         # Step 1: Train on real images
@@ -264,8 +264,8 @@ for seed_num, seed in enumerate(SEEDS):
 
         print("Training complete.")
 
-        torch.save(netG.state_dict(), f'./trained_models/{seed}/GAN_netG_{learning_rate}.pth')
-        torch.save(netD.state_dict(), f'./trained_models/{seed}/GAN_netD_{learning_rate}.pth')
+        torch.save(netG.state_dict(), f'./trained_models/{seed}/improved_GAN_netG_{learning_rate}.pth')
+        torch.save(netD.state_dict(), f'./trained_models/{seed}/improved_GAN_netD_{learning_rate}.pth')
 
     if run["CGAN"]:
 
@@ -278,7 +278,7 @@ for seed_num, seed in enumerate(SEEDS):
         netG = cgans.Generator(num_classes=8).to(device)
         netD = cgans.Discriminator(num_classes=8).to(device)
 
-        learning_rate = 0.01
+        learning_rate = 0.001
 
         optimizerD = optim.Adam(netD.parameters(), lr=learning_rate, betas=(0.5, 0.999))
         optimizerG = optim.Adam(netG.parameters(), lr=learning_rate, betas=(0.5, 0.999))
@@ -287,7 +287,7 @@ for seed_num, seed in enumerate(SEEDS):
 
         latent_dim = 100
         batch_size = 128
-        num_epochs = 300
+        num_epochs = 500
         k = 1
 
         real_label = 1
@@ -296,44 +296,44 @@ for seed_num, seed in enumerate(SEEDS):
         criterion = nn.BCELoss()
 
         losses = []
-
+        lossD = 1
         for epoch in range(num_epochs):
             for i, (data, label) in enumerate(dataloader):
-
-                for _ in range(k):
+                if lossD > 0.1:
+                    for _ in range(k):
                     
-                    # Step 1: Train on real images
-                    netD.zero_grad()
+                        # Step 1: Train on real images
+                        netD.zero_grad()
                     
-                    real_images = data.to(device)
-                    real_class_labels = label.to(device).long()  # For embedding
-                    b_size = real_images.size(0)
-                    real_labels = torch.full((b_size,), real_label, dtype=torch.float, device=device)  # For BCELoss
+                        real_images = data.to(device)
+                        real_class_labels = label.to(device).long()  # For embedding
+                        b_size = real_images.size(0)
+                        real_labels = torch.full((b_size,), real_label, dtype=torch.float, device=device)  # For BCELoss
 
-                    output_real = netD(real_images, real_class_labels)
-                    loss_real = criterion(output_real, real_labels)
-                    loss_real.backward()
+                        output_real = netD(real_images, real_class_labels)
+                        loss_real = criterion(output_real, real_labels)
+                        loss_real.backward()
 
-                    # Step 2: Train on fake images
-                    noise = torch.randn(b_size, latent_dim, 1, 1, device=device)
+                        # Step 2: Train on fake images
+                        noise = torch.randn(b_size, latent_dim, 1, 1, device=device)
 
-                    fake_class_labels = torch.tensor(
-                        np.random.choice(8, size=b_size, p=class_probs),
-                        device=device
-                    )
+                        fake_class_labels = torch.tensor(
+                            np.random.choice(8, size=b_size, p=class_probs),
+                            device=device
+                        )
 
-                    #fake_class_labels = torch.randint(0, 8, (b_size,), device=device)
+                        #fake_class_labels = torch.randint(0, 8, (b_size,), device=device)
 
-                    fake_images = netG(noise, fake_class_labels)
-                    output_fake = netD(fake_images.detach(), fake_class_labels)
-                    fake_targets = torch.full((b_size,), fake_label, dtype=torch.float, device=device)
+                        fake_images = netG(noise, fake_class_labels)
+                        output_fake = netD(fake_images.detach(), fake_class_labels)
+                        fake_targets = torch.full((b_size,), fake_label, dtype=torch.float, device=device)
 
-                    loss_fake = criterion(output_fake, fake_targets)
-                    loss_fake.backward()
+                        loss_fake = criterion(output_fake, fake_targets)
+                        loss_fake.backward()
 
-                    # Step 3: Update Discriminator
-                    lossD = loss_real + loss_fake
-                    optimizerD.step()
+                        # Step 3: Update Discriminator
+                        lossD = loss_real + loss_fake
+                        optimizerD.step()
 
                 ########################
                 # 2. Train Generator
@@ -367,12 +367,12 @@ for seed_num, seed in enumerate(SEEDS):
 
     if run["Diffusion"]:
 
-        from models import diffusion_models 
+        from models import diffusion_models_improved as diffusion_models 
         from torch.optim import Adam
 
         no_train = False
         batch_size = 128
-        n_epochs = 300
+        n_epochs = 500
         learning_rate = 0.001
 
         # Defining model

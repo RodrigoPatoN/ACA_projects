@@ -91,8 +91,8 @@ for seed_num, seed in enumerate(SEEDS):
 
         from models import autoencoders 
 
-        vae_01 = autoencoders.VAE(color_channels=3, latent_dim=128)
-        vae_01.load_state_dict(torch.load(f"trained_models/{seed}/vae_model_0.01.pth"))
+        #vae_01 = autoencoders.VAE(color_channels=3, latent_dim=128)
+        #vae_01.load_state_dict(torch.load(f"trained_models/{seed}/vae_model_0.01.pth"))
 
         vae_001 = autoencoders.VAE(color_channels=3, latent_dim=128)
         vae_001.load_state_dict(torch.load(f"trained_models/{seed}/vae_model_0.001.pth"))
@@ -100,13 +100,13 @@ for seed_num, seed in enumerate(SEEDS):
         os.makedirs("generated_images/VAE", exist_ok=True)
         os.makedirs(f"generated_images/VAE/{seed_num}", exist_ok=True)
         os.makedirs(f"generated_images/VAE/{seed_num}/001", exist_ok=True)
-        os.makedirs(f"generated_images/VAE/{seed_num}/01", exist_ok=True)
+        #os.makedirs(f"generated_images/VAE/{seed_num}/01", exist_ok=True)
 
-        generated_01 = autoencoders.generate_images_vae(vae_01, num_images=num_images, latent_dim=128)
+        #generated_01 = autoencoders.generate_images_vae(vae_01, num_images=num_images, latent_dim=128)
         generated_001 = autoencoders.generate_images_vae(vae_001, num_images=num_images, latent_dim=128)
 
-        for i in range(len(generated_01)):
-            save_image(generated_01[i], f"generated_images/VAE/{seed_num}/01/{i}.png")
+        for i in range(len(generated_001)):
+            #save_image(generated_01[i], f"generated_images/VAE/{seed_num}/01/{i}.png")
             save_image(generated_001[i], f"generated_images/VAE/{seed_num}/001/{i}.png")
 
         print(f"Generated AE images for seed {seed}")
@@ -137,25 +137,25 @@ for seed_num, seed in enumerate(SEEDS):
 
         from models import gans
 
-        generator_01 = gans.Generator()
-        generator_01.load_state_dict(torch.load(f"trained_models/{seed}/GAN_netG_0.01.pth", map_location=device))
-        generator_01.to(device)
+        #generator_01 = gans.Generator()
+        #generator_01.load_state_dict(torch.load(f"trained_models/{seed}/GAN_netG_0.01.pth", map_location=device))
+        #generator_01.to(device)
 
         generator_001 = gans.Generator()
-        generator_001.load_state_dict(torch.load(f"trained_models/{seed}/GAN_netG_0.001.pth", map_location=device))
+        generator_001.load_state_dict(torch.load(f"trained_models/{seed}/improved_GAN_netG_0.001.pth", map_location=device))
         generator_001.to(device)
 
-        images_01 = gans.generate_images(generator_01, num_images=num_images, device=device)
+        #images_01 = gans.generate_images(generator_01, num_images=num_images, device=device)
         images_001 = gans.generate_images(generator_001, num_images=num_images, device=device)
 
         os.makedirs("generated_images/GAN", exist_ok=True)
         os.makedirs(f"generated_images/GAN/{seed_num}", exist_ok=True)
         os.makedirs(f"generated_images/GAN/{seed_num}/001", exist_ok=True)
-        os.makedirs(f"generated_images/GAN/{seed_num}/01", exist_ok=True)
+        #os.makedirs(f"generated_images/GAN/{seed_num}/01", exist_ok=True)
 
         # Save generated images
-        for i in range(len(images_01)):
-            save_image(images_01[i], f"generated_images/GAN/{seed_num}/01/{i}.png")
+        for i in range(len(images_001)):
+            #save_image(images_01[i], f"generated_images/GAN/{seed_num}/01/{i}.png")
             save_image(images_001[i], f"generated_images/GAN/{seed_num}/001/{i}.png")
 
         print(f"Generated GAN images for seed {seed}")
