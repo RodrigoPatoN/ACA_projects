@@ -6,11 +6,12 @@ import numpy as np
 class Generator(nn.Module):
     def __init__(self, latent_dim=100, num_classes=10):
         super(Generator, self).__init__()
-        self.label_emb = nn.Embedding(num_classes, num_classes)
+        n_dim_class = 100
+        self.label_emb = nn.Embedding(num_classes, n_dim_class)
         #self.label_emb = nn.Embedding(num_classes, latent_dim)
 
         self.main = nn.Sequential(
-            nn.ConvTranspose2d(latent_dim + num_classes, 256, 4, 1, 0, bias=False),
+            nn.ConvTranspose2d(latent_dim + n_dim_class, 256, 4, 1, 0, bias=False),
             nn.BatchNorm2d(256),
             nn.ReLU(True),
             nn.ConvTranspose2d(256, 128, 4, 2, 1, bias=False),
@@ -30,12 +31,13 @@ class Generator(nn.Module):
         return self.main(input)
 
 class Discriminator(nn.Module):
-    def __init__(self, num_classes=10):
+    def __init__(self, num_classes=8):
         super(Discriminator, self).__init__()
-        self.label_emb = nn.Embedding(num_classes, num_classes)
+        n_dim_class = 100
+        self.label_emb = nn.Embedding(num_classes, n_dim_class)
 
         self.model = nn.Sequential(
-            nn.Conv2d(3 + num_classes, 64, 4, 2, 1, bias=False),
+            nn.Conv2d(3 + n_dim_class, 64, 4, 2, 1, bias=False),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(64, 128, 4, 2, 1, bias=False),
             nn.BatchNorm2d(128),
